@@ -1,0 +1,5 @@
+get-programs:
+  url: ${apiUrl}/programs?type=movie&sort=channum&desc=true&offset=1000
+  method: GET
+  headers:
+    Accept: application/json

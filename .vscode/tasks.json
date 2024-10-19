@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "uvicorn server",
+      "type": "shell",
+      "command": ". ${workspaceFolder}/.venv/bin/activate; ${workspaceFolder}/.venv/bin/uvicorn api.main:app",
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=75.1.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mythme"
+version = "0.0.2"
+description = "Find and record programs on MythTV"
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["mythtv", "canned", "search"]
+dynamic = ["dependencies"]
+requires-python = ">=3.12"
+
+[project.urls]
+Homepage = "https://github.com/donaldoakes/mythme#readme"
+
+[project.scripts]
+mythme = "mythme.__main__:main"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements-prod.txt"]}

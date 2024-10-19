@@ -1,0 +1,7 @@
+[flake8]
+exclude =
+    .venv
+    .repositories,
+    __pycache__
+extend-ignore = E203
+max-line-length = 120

@@ -1,0 +1,5 @@
+get-settings:
+  url: ${mythtv.apiUrl}/Myth/GetSettingList
+  method: GET
+  headers:
+    Accept: application/json

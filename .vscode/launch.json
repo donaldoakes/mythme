@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "api-server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["mythme.api.main:app", "--app-dir=src"],
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

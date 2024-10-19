@@ -1,0 +1,5 @@
+get-record-schedule:
+  url: ${mythtv.apiUrl}/Dvr/GetRecordSchedule?ChanId=23914&StartTime=2024-07-20T05:00:00
+  method: POST
+  headers:
+    Accept: application/json

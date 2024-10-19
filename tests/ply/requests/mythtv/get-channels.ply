@@ -1,0 +1,5 @@
+get-channels:
+  url: ${mythtv.apiUrl}/Channel/GetChannelInfoList?Details=false
+  method: GET
+  headers:
+    Accept: application/json
