@@ -1,0 +1,5 @@
+get-query:
+  url: ${apiUrl}/queries/noway
+  method: GET
+  headers:
+    Accept: application/json

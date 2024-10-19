@@ -1,0 +1,5 @@
+get-program-guide:
+  url: ${mythtv.apiUrl}/Guide/GetProgramGuide?StartTime=2024-07-11T00:00:00&EndTime=2024-07-12T00:00:00
+  method: GET
+  headers:
+    Accept: application/json

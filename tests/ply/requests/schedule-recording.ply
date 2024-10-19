@@ -1,0 +1,11 @@
+schedule-recording:
+  url: ${apiUrl}/recordings
+  method: PUT
+  headers:
+    Content-Type: application/json
+  body: |-
+    {
+      "channel_id": 23914,
+      "start": "2024-07-20T05:00:00",
+      "type": "Single Record"
+    }

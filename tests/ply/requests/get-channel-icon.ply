@@ -1,0 +1,4 @@
+get-channel-icon:
+  url: ${iconsUrl}/s28708_light_360w_270h.png
+  method: GET
+  headers: {}

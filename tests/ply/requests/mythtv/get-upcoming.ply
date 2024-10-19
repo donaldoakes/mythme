@@ -1,0 +1,5 @@
+get-upcoming:
+  url: ${mythtv.apiUrl}/Dvr/GetUpcomingList
+  method: POST
+  headers:
+    Accept: application/json

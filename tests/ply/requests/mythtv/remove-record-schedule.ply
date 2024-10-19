@@ -1,0 +1,4 @@
+remove-record-schedule:
+  url: ${mythtv.apiUrl}/Dvr/RemoveRecordSchedule?RecordId=1174
+  method: POST
+  headers: {}

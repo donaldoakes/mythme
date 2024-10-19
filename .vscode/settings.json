@@ -1,0 +1,14 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "mypy.runUsingActiveInterpreter": true,
+  "python.testing.pytestArgs": ["-c", "pytest.ini"],
+  "python.testing.pytestEnabled": true,
+  "search.exclude": {
+    ".repositories": true
+  },
+  "python.analysis.exclude": [".repositories/**"]
+}

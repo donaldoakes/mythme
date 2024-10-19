@@ -1,0 +1,5 @@
+get-queries:
+  url: ${apiUrl}/queries
+  method: GET
+  headers:
+    Accept: application/json

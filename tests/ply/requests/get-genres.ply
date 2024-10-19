@@ -1,0 +1,5 @@
+get-genres:
+  url: ${apiUrl}/programs/genres
+  method: GET
+  headers:
+    Accept: application/json

@@ -1,0 +1,18 @@
+create-query:
+  url: ${apiUrl}/queries
+  method: POST
+  headers:
+    Content-Type: application/json
+  body: |-
+    {
+      "name": "Horror movies of the 1930s and 1940s",
+      "criteria": [
+        { "name": "type", "operator": "=", "value": "movie" },
+        {
+          "name": "category",
+          "operator": "IN",
+          "value": "[\"Horror\",\"Mystery\"]"
+        },
+        { "name": "year", "operator": "BETWEEN", "value": "[\"1930\",\"1940\"]" }
+      ]
+    }

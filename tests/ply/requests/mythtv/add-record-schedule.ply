@@ -1,0 +1,6 @@
+add-record-schedule:
+  url: ${mythtv.apiUrl}/Dvr/AddRecordSchedule?ChanId=23914&StartTime=2024-07-20T05:00:00Z&EndTime=2024-07-20T06:00:00Z&Station=FMC&Type=Single Record&Title=A Man Betrayed&FindDay=0&FindTime=00:00:00
+  method: POST
+  headers:
+    Content-Type: application/json
+    Accept: application/json

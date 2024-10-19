@@ -1,0 +1,4 @@
+get-channel-icon:
+  url: ${mythtv.apiUrl}/Guide/GetChannelIcon?ChanId=20767
+  method: GET
+  headers: {}

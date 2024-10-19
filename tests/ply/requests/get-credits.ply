@@ -1,0 +1,5 @@
+get-credits:
+  url: ${apiUrl}/credits?channel_id=23914&start=2024-08-01T15:30:00Z
+  method: GET
+  headers:
+    Accept: application/json

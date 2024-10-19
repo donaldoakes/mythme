@@ -1,0 +1,5 @@
+get-channels:
+  url: ${apiUrl}/channels
+  method: GET
+  headers:
+    Accept: application/json

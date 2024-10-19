@@ -1,0 +1,5 @@
+get-movies:
+  url: ${apiUrl}/programs?type=movie&category=IN["Horror","Suspense","Mystery"]&year=BETWEEN["1930","1945"]
+  method: GET
+  headers:
+    Accept: application/json
