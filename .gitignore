@@ -8,3 +8,5 @@ __pycache__/
 /.repositories
 /notes/
 temp/
+*.egg-info/
+dist/

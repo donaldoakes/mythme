@@ -16,7 +16,7 @@ pip install -r requirements-dev.txt
 ## Env setup
 Create a local .env with information for MariaDB connection. Use .env.sample as a guide.
 
-## type checks
+## Type checks
 ```
 mypy .
 ```
@@ -37,3 +37,6 @@ cd src
 uvicorn api.main:app --app-dir=src --reload
 ```
 
+## Increment version
+ - pyproject.toml
+ - src/mythme/__init__.py
