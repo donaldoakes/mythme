@@ -2,9 +2,9 @@
 **Find and record programs on MythTV**
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-dark.png#gh-dark-mode-only">
-  <img alt="mythme" src="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-dark.png#gh-dark-mode-only">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-dark.png" style="width:50px">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-dark.png#gh-dark-mode-only" style="width:50px">
+  <img alt="mythme" src="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-dark.png#gh-dark-mode-only" width="50px">
 </picture>
 
 Inspired by [MythWeb](https://github.com/MythTV/mythweb)'s Canned Searches feature, mythme makes it easy
