@@ -37,6 +37,24 @@ cd src
 uvicorn api.main:app --app-dir=src --reload
 ```
 
+## run uvicorn
+```
+uvicorn mythme.api.main:app --host=0.0.0.0 --port=8000 --app-dir=src
+```
+
+## run main
+```
+python src/mythme
+```
+
+## editable install
+```
+python -m pip install -e .
+```
+
 ## Increment version
  - pyproject.toml
  - src/mythme/__init__.py
+
+## Build wheel:
+`python -m build`

@@ -13,27 +13,22 @@ The result after clicking Save:
 ![mythme programs](https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/programs-dark.png#gh-dark-mode-only)
 
 
-## prerequisites
+## Prerequisites
 - python 3
 - mariadb connector/c
 
-## environment variable
+## Environment variable
 ```
 MYTHME_DIR="~/.mythme"
 ```
 (default is '~/.mythme')
 
-## run uvicorn
+## Installation
 ```
-uvicorn mythme.api.main:app --host=0.0.0.0 --port=8000 --app-dir=src
-```
-
-## run main
-```
-python src/mythme
+python -m pip install mythme
 ```
 
-## editable install
+## Run server
 ```
-python -m pip install -e .
+mythme
 ```

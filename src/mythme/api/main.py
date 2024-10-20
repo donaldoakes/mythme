@@ -58,7 +58,7 @@ app.add_middleware(
 app.include_router(router)
 app.mount(
     "/mythme",
-    StaticFiles(directory=f"{os.path.dirname(__file__)}/../../../ui", html=True),
+    StaticFiles(packages=[("mythme", "ui")], html=True),
     name="ui",
 )
 app.mount(

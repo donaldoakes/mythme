@@ -1,1 +1,1 @@
-include ui/** docs/**/*
+include src/mythme/ui/**/*
