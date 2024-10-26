@@ -9,6 +9,15 @@
       "args": ["mythme.api.main:app", "--app-dir=src"],
       "console": "integratedTerminal",
       "justMyCode": true
+    },
+    {
+      "name": "cli",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "src/mythme/__main__.py",
+      "args": ["--version"],
+      "console": "integratedTerminal",
+      "justMyCode": true
     }
   ]
 }

@@ -32,6 +32,9 @@ def load_config() -> MythmeConfig:
 
     cfg: dict[str, Any] = {}
     yaml_file = f"{mythme_dir}/mythme.yaml"
+    if not Path(yaml_file).is_file():
+        yaml_file = f"{mythme_dir}/mythme.yml"
+
     if Path(yaml_file).is_file():
         logger.info(f"Loading mythme config from file: {yaml_file}")
         with open(yaml_file, "r") as f:

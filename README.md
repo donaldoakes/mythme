@@ -30,19 +30,50 @@ python -m venv ~/.local --system-site-packages
 ~/.local/bin/pip install mythme
 ```
 
-## Environment variables
-Be sure ~/.local/bin is in your $PATH.
+## Environment variable
+The MYTHME_DIR environment variable points to a directory where mythme
+stores saved queries and other items. It's also where you can create a mythme.yaml
+file to [configure](#configuration) mythme.
 ```
-MYTHME_DIR="~/.mythme"
+export MYTHME_DIR="~/.mythme"
 ```
-(default is '~/.mythme')
+(default is `~/.mythme`)
 
 ## Configuration
+In many cases no configuration is required. This is especially true if you're
+running mythme on MythTV's master backend host.
+### Database
+For [Database Configuration](https://www.mythtv.org/wiki/Config.xml#Database),
+mythme looks for `~/.mythtv/config.xml` and uses the `<Database>` element if present.
+### MythTV API server
+To determine the [MythTV Services API](https://www.mythtv.org/wiki/Services_API) host, mythme tries
+`BackendServerAddr` and `BackendStatusPort` from MythTV's `settings` db table.
+### Custom config
+Settings specified in `$MYTHME_DIR/mythme.yaml` override the autoconfig values above.
+Here's an example mythme.yaml:
+```yaml
+database:
+  host: '192.168.0.70'
+  port: 3306
+  database: mythconverg
+  username: mythtv
+  password: mythtv
 
+mythtv_api_base: http://192.168.0.70:6544
+```
 
 ## Run server
+Make sure `~/.local/bin` is in your $PATH.
 ```
 mythme
+```
+
+## Command line options
+```
+-h, --help   show this help message
+--version    show mythme's version
+--host HOST  Server host
+--port PORT  Server port
 ```
 
 ## Channel icons
