@@ -25,17 +25,19 @@ The result after clicking Save:
 
 ## Installation
 This installs to a local virtual environment.
-Be sure ~/.local/bin is in your $PATH.
 ```
 python -m venv ~/.local --system-site-packages
 ~/.local/bin/pip install mythme
 ```
 
-## Environment variable
+## Environment variables
+Be sure ~/.local/bin is in your $PATH.
 ```
 MYTHME_DIR="~/.mythme"
 ```
 (default is '~/.mythme')
+
+## Configuration
 
 
 ## Run server
@@ -44,3 +46,6 @@ mythme
 ```
 
 ## Channel icons
+Channel icons are disabled by default.
+To enable, click the dropdown caret next to the Channel column heading.
+Check the "Icons" box and confirm.
