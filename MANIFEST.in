@@ -1,1 +1,1 @@
-include src/mythme/ui/**/*
+recursive-include src/mythme/ui *

@@ -52,11 +52,21 @@ python src/mythme
 python -m pip install -e .
 ```
 
+## requirements-prod.txt
+```
+rm -rf .venv
+python -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+pip freeze > requirements-prod.txt
+```
+
 ## Increment version
  - pyproject.toml
  - src/mythme/__init__.py
 
 ## Build wheel:
 ```
+rm -rf ./dist
 python -m build
 ```
