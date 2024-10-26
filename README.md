@@ -1,10 +1,12 @@
 # mythme
+<div style="display: flex">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-dark.png" style="width:50px">
   <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-light.png" style="width:50px">
   <img alt="mythme" src="https://raw.githubusercontent.com/donaldoakes/mythme/main/docs/img/mm-light.png" width="50px">
 </picture>
-<span style="margin-left: 5px; line-height: 40px; vertical-align:top;">Find and record programs on MythTV<span>
+Find and record programs on MythTV
+</div>
 
 Inspired by [MythWeb](https://github.com/MythTV/mythweb)'s Canned Searches feature, mythme makes it easy
 to create and save custom queries. For example, a query named `Horror Movies of the 1930s`:
