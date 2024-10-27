@@ -1,7 +1,7 @@
-import os
 import platform
 import asyncio
 from contextlib import asynccontextmanager
+from starlette.responses import RedirectResponse
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -66,3 +66,9 @@ app.mount(
     StaticFiles(directory=f"{channels_data.icons_dir}", html=False),
     name="icons",
 )
+
+
+@app.get("/")
+def get_root():
+    response = RedirectResponse(url='/mythme')
+    return response
