@@ -67,6 +67,8 @@ Make sure `~/.local/bin` is in your $PATH.
 ```
 mythme
 ```
+Access mythme in your web browser at:
+[http://localhost:8000/mythme](http://localhost:8000/mythme).
 
 ## Command line options
 ```
