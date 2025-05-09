@@ -14,7 +14,7 @@ if log_level == "TRACE":
 else:
     logging.basicConfig(level=logging.INFO, format=log_format, datefmt=date_format)
 level = logging.getLevelNamesMapping()[log_level]
-logger = logging.getLogger("mythtv")
+logger = logging.getLogger("mythme")
 logger.setLevel(level)
 if log_level != "TRACE":
     # httpx and azure http logging are very chatty at INFO level

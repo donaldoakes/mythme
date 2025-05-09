@@ -1,5 +1,5 @@
 testsLocation: tests/ply
 
 valuesFiles:
-  test/values/localhost.json: true
-  test/values/mythtv.json: true
+  tests/values/localhost.json: true
+  tests/values/mythtv.json: true
