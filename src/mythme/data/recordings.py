@@ -2,11 +2,12 @@ import time
 from datetime import datetime
 from typing import Optional
 from mythme.model.channel import Channel, ChannelIcon
-from mythme.model.query import Query
+from mythme.model.query import Query, Sort
 from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import ScheduledRecording
 from mythme.utils.mythtv import api_call
 from mythme.utils.log import logger
+from mythme.utils.text import trim_article
 
 
 class RecordingsData:
@@ -38,7 +39,29 @@ class RecordingsData:
         else:
             raise Exception("Failed to retrieve recordings")
 
+        if query.sort.name and query.sort.name != "start":
+            recordings.sort(
+                key=lambda rec: self.sort(rec, query.sort),
+                reverse=True if query.sort.order == "desc" else False,
+            )
+
         return RecordingsResponse(recordings=recordings, total=total)
+
+    def sort(self, recording: Recording, sort: Sort) -> tuple:
+        """Sort according to query."""
+        title = trim_article(recording.title.lower())
+        if sort.name == "title":
+            return (title, recording.start)
+        elif sort.name == "year":
+            return (recording.year or 0, title)
+        elif sort.name == "rating":
+            return (recording.rating or 0, title)
+        elif sort.name == "channel":
+            return (recording.channel.number, title)
+        elif sort.name == "category":
+            return (recording.category, title)
+        else:
+            raise ValueError(f"Unsupported sort: {sort.name}")
 
     def load_scheduled(self):
         before = time.time()
