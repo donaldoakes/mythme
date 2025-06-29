@@ -73,4 +73,4 @@ def unschedule_recording(id: int):
 
     RecordingsData().remove_scheduled_recording(id)
 
-    return {"detail": "OK"}
+    return {"message": "OK"}

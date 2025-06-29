@@ -26,7 +26,7 @@ async def create_query(query: SavedQuery):
             status_code=409, detail=f"Query already exists: {query.name}"
         )
     query_data.save_query(query)
-    return {"detail": "Created"}
+    return {"message": "Created"}
 
 
 @router.put("/queries/{name}")
@@ -38,7 +38,7 @@ async def update_query(name: str, query: SavedQuery):
         # renamed so delete old
         query_data.delete_query(name)
     query_data.save_query(query)
-    return {"detail": "OK"}
+    return {"message": "OK"}
 
 
 @router.delete("/queries/{name}")
