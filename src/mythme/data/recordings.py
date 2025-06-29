@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 from typing import Optional
 from mythme.model.channel import Channel, ChannelIcon
+from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import ScheduledRecording
@@ -116,8 +117,12 @@ class RecordingsData:
             recording.season = prog["Season"]
             if "Episode" in prog and prog["Episode"]:
                 recording.episode = prog["Episode"]
+        recording.credits = []
         if "Cast" in prog and "CastMembers" in prog["Cast"]:
-            recording.credits = len(prog["Cast"]["CastMembers"])
+            recording.credits = [
+                Credit(name=cm["Name"], role=cm["Role"])
+                for cm in prog["Cast"]["CastMembers"]
+            ]
 
         return recording
 

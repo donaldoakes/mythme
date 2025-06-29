@@ -1,5 +1,5 @@
 get-recordings:
-  url: ${apiUrl}/recordings?limit=500&sort=title
+  url: ${apiUrl}/recordings?limit=500
   method: GET
   headers:
     Accept: application/json
