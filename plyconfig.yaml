@@ -1,5 +1,6 @@
 testsLocation: tests/ply
 
 valuesFiles:
-  tests/values/localhost.json: true
+  tests/values/localhost.json: false
+  tests/values/mythbe2.json: true
   tests/values/mythtv.json: true

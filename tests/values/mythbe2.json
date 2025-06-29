@@ -1,0 +1,5 @@
+{
+  "apiUrl": "http://192.168.0.70:8000/api",
+  "uiUrl": "http://192.168.0.70:8000/mythme",
+  "iconsUrl": "http://192.168.0.70:8000/icons"
+}
