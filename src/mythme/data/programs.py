@@ -16,7 +16,6 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
     tables = "FROM channel, program"
     clause = "WHERE channel.chanid = program.chanid AND channel.visible > 0"
 
-    # TODO pagination and sorting
     def get_programs(self, query: Query, with_genres: bool = False) -> ProgramsResponse:
         fields = ProgramData.fields
         tables = ProgramData.tables

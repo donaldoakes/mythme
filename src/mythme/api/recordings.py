@@ -1,11 +1,20 @@
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Request, HTTPException
 from mythme.data.recordings import RecordingsData
-from mythme.model.recording import RecordingRequest, ScheduledRecording, recording_types
+from mythme.model.recording import RecordingsResponse
+from mythme.model.scheduled import RecordingRequest, ScheduledRecording, recording_types
+from mythme.query.queries import parse_params
 from mythme.utils.mythtv import api_call
 from mythme.utils.log import logger
 
 router = APIRouter()
+
+
+@router.get("/recordings", response_model_exclude_none=True)
+def get_recordings(request: Request) -> RecordingsResponse:
+    query = parse_params(dict(request.query_params))
+    recordings_data = RecordingsData()
+    return recordings_data.get_recordings(query)
 
 
 @router.put("/recordings")

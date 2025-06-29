@@ -1,0 +1,5 @@
+get-recorded-list:
+  url: ${mythtv.apiUrl}/Dvr/GetRecordedList
+  method: GET
+  headers:
+    Accept: application/json

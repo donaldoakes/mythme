@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from mythme.model.channel import Channel
 from mythme.model.query import DbQuery
-from mythme.model.recording import ScheduledRecording
+from mythme.model.scheduled import ScheduledRecording
 
 ProgramType = Literal["", "movie", "series", "sports", "tvshow"]
 

@@ -26,12 +26,12 @@ async def periodic_reload(after: int = 600):
     """
     while True:
         await asyncio.sleep(after)
-        recording_data.load()
+        recording_data.load_scheduled()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    recording_data.load()
+    recording_data.load_scheduled()
     channels_data.load_icons()
     asyncio.create_task(periodic_reload())
     yield
@@ -70,5 +70,5 @@ app.mount(
 
 @app.get("/")
 def get_root():
-    response = RedirectResponse(url='/mythme')
+    response = RedirectResponse(url="/mythme")
     return response
