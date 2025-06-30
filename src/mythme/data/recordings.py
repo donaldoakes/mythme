@@ -61,6 +61,8 @@ class RecordingsData:
             return (recording.channel.number, title)
         elif sort.name == "category":
             return (recording.category, title)
+        elif sort.name == "size":
+            return (recording.size, title)
         else:
             raise ValueError(f"Unsupported sort: {sort.name}")
 
@@ -108,6 +110,7 @@ class RecordingsData:
             status=rec["StatusName"],
             file=rec["FileName"],
             size=rec["FileSize"],
+            group=rec["StorageGroup"],
         )
         if "Airdate" in prog and prog["Airdate"]:
             hyphen = prog["Airdate"].find("-")

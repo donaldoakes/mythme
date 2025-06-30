@@ -9,6 +9,7 @@ class Recording(Program):
     status: RecordingStatus
     file: str
     size: int
+    group: str
 
 
 class RecordingsResponse(BaseModel):
