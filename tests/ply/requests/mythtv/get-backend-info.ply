@@ -1,0 +1,5 @@
+get-backend-info:
+  url: ${mythtv.apiUrl}/Myth/GetBackendInfo
+  method: GET
+  headers:
+    Accept: application/json

@@ -4,5 +4,6 @@ pydantic>=2.8.2,<3
 python-dotenv>=1.0.1,<2
 pyyaml>=6.0.2,<7
 requests>=2.32.3,<3
+httpx>=0.28.1
 uvicorn[standard]>=0.32.0,<0.33
 

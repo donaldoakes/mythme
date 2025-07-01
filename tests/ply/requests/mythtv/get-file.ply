@@ -1,0 +1,5 @@
+get-file:
+  url: ${mythtv.apiUrl}/Content/GetFile?StorageGroup=Default&FileName=20767_20210812215900.ts
+  method: GET
+  headers:
+    Accept: application/json

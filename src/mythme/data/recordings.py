@@ -1,15 +1,72 @@
 import time
 from datetime import datetime
 from typing import Optional
-from mythme.model.recording import ScheduledRecording
+from mythme.model.channel import Channel, ChannelIcon
+from mythme.model.credit import Credit
+from mythme.model.query import Query, Sort
+from mythme.model.recording import Recording, RecordingsResponse
+from mythme.model.scheduled import ScheduledRecording
 from mythme.utils.mythtv import api_call
 from mythme.utils.log import logger
+from mythme.utils.text import trim_article
 
 
 class RecordingsData:
     scheduled_recordings: list[ScheduledRecording] = []
 
-    def load(self):
+    def get_recordings(self, query: Query) -> RecordingsResponse:
+        params = ""
+        if query.paging.offset:
+            params += "&" if params else "?"
+            params += f"StartIndex={query.paging.offset}"
+        if query.paging.limit:
+            params += "&" if params else "?"
+            params += f"Count={query.paging.limit}"
+        if query.sort.order == "desc":
+            params += "&" if params else "?"
+            params += "Descending=true"
+
+        before = time.time()
+        result = api_call("Dvr/GetRecordedList" + params)
+        total = 0
+        if result and "ProgramList" in result and "Programs" in result["ProgramList"]:
+            recordings = [
+                self.to_recording(prog) for prog in result["ProgramList"]["Programs"]
+            ]
+            total = result["ProgramList"]["TotalAvailable"]
+            logger.info(
+                f"Retrieved {len(recordings)} recordings in: {(time.time() - before):.2f} seconds\n"  # noqa: E501
+            )
+        else:
+            raise Exception("Failed to retrieve recordings")
+
+        if query.sort.name and query.sort.name != "start":
+            recordings.sort(
+                key=lambda rec: self.sort(rec, query.sort),
+                reverse=True if query.sort.order == "desc" else False,
+            )
+
+        return RecordingsResponse(recordings=recordings, total=total)
+
+    def sort(self, recording: Recording, sort: Sort) -> tuple:
+        """Sort according to query."""
+        title = trim_article(recording.title.lower())
+        if sort.name == "title":
+            return (title, recording.start)
+        elif sort.name == "year":
+            return (recording.year or 0, title)
+        elif sort.name == "rating":
+            return (recording.rating or 0, title)
+        elif sort.name == "channel":
+            return (recording.channel.number, title)
+        elif sort.name == "category":
+            return (recording.category, title)
+        elif sort.name == "size":
+            return (recording.size, title)
+        else:
+            raise ValueError(f"Unsupported sort: {sort.name}")
+
+    def load_scheduled(self):
         before = time.time()
         logger.info("Loading scheduled recordings...")
         result = api_call("Dvr/GetUpcomingList")
@@ -23,6 +80,54 @@ class RecordingsData:
             )
         else:
             logger.error("Failed to load scheduled recordings")
+
+    def to_recording(self, prog: dict) -> Recording:
+        chan = prog["Channel"]
+        channel = Channel(
+            id=chan["ChanId"],
+            number=chan["ChanNum"],
+            callsign=chan["CallSign"],
+            name=chan["ChannelName"],
+        )
+        if "Icon" in chan:
+            channel.icon = ChannelIcon(file=chan["Icon"])
+            try:
+                channel.icon.shade = chan["Icon"].split("_")[1]
+            except IndexError:
+                pass
+
+        rec = prog["Recording"]
+        recording = Recording(
+            channel=channel,
+            title=prog["Title"],
+            subtitle=prog["SubTitle"] or None,
+            start=datetime.fromisoformat(prog["StartTime"]),
+            end=datetime.fromisoformat(prog["EndTime"]),
+            description=prog["Description"] or None,
+            type=prog["CatType"],
+            category=prog["Category"],
+            rating=prog["Stars"] * 5 if "Stars" in prog else 0,
+            status=rec["StatusName"],
+            file=rec["FileName"],
+            size=rec["FileSize"],
+            group=rec["StorageGroup"],
+        )
+        if "Airdate" in prog and prog["Airdate"]:
+            hyphen = prog["Airdate"].find("-")
+            if hyphen == 4:
+                recording.year = int(prog["Airdate"][:4])
+        if "Season" in prog and prog["Season"]:
+            recording.season = prog["Season"]
+            if "Episode" in prog and prog["Episode"]:
+                recording.episode = prog["Episode"]
+        recording.credits = []
+        if "Cast" in prog and "CastMembers" in prog["Cast"]:
+            recording.credits = [
+                Credit(name=cm["Name"], role=cm["Role"])
+                for cm in prog["Cast"]["CastMembers"]
+            ]
+
+        return recording
 
     def to_scheduled_recording(self, sr: dict) -> ScheduledRecording:
         return ScheduledRecording(

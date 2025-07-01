@@ -1,5 +1,6 @@
 from mythme.model.program import Program
 from mythme.model.query import Criterion, Operator, Paging, Query, Sort
+from mythme.model.recording import Recording
 
 
 def parse_params(params: dict[str, str]) -> Query:
@@ -35,7 +36,7 @@ def parse_params(params: dict[str, str]) -> Query:
     sort = Sort(name="start")
     if "sort" in params:
         sort_name = params["sort"]
-        if sort_name in Program.model_fields.keys() or sort_name in [
+        if sort_name in Recording.model_fields.keys() or sort_name in [
             "channel",
             "channum",
         ]:

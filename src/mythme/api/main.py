@@ -13,6 +13,7 @@ from mythme.api import programs
 from mythme.api import queries
 from mythme.api import recordings
 from mythme.api import credits
+from mythme.api import content
 
 logger.info(f"Python: {platform.python_version()}")
 
@@ -26,12 +27,12 @@ async def periodic_reload(after: int = 600):
     """
     while True:
         await asyncio.sleep(after)
-        recording_data.load()
+        recording_data.load_scheduled()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    recording_data.load()
+    recording_data.load_scheduled()
     channels_data.load_icons()
     asyncio.create_task(periodic_reload())
     yield
@@ -44,6 +45,7 @@ router.include_router(programs.router)
 router.include_router(queries.router)
 router.include_router(recordings.router)
 router.include_router(credits.router)
+router.include_router(content.router)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -70,5 +72,5 @@ app.mount(
 
 @app.get("/")
 def get_root():
-    response = RedirectResponse(url='/mythme')
+    response = RedirectResponse(url="/mythme")
     return response

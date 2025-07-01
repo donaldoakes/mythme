@@ -16,7 +16,6 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
     tables = "FROM channel, program"
     clause = "WHERE channel.chanid = program.chanid AND channel.visible > 0"
 
-    # TODO pagination and sorting
     def get_programs(self, query: Query, with_genres: bool = False) -> ProgramsResponse:
         fields = ProgramData.fields
         tables = ProgramData.tables
@@ -177,7 +176,7 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
             episode=row["episode"] or None,
             aired=row["originalairdate"] or None,
             genre=row["genre"] if "genre" in row else None,
-            credits=row["credits"] or None,
+            credits=row["credits"] or 0,
         )
 
     def from_local_timezone(self, dt: datetime) -> datetime:
