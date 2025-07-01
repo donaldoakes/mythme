@@ -107,6 +107,7 @@ class RecordingsData:
             type=prog["CatType"],
             category=prog["Category"],
             rating=prog["Stars"] * 5 if "Stars" in prog else 0,
+            recid=rec["RecordedId"],
             status=rec["StatusName"],
             file=rec["FileName"],
             size=rec["FileSize"],

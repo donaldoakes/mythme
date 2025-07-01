@@ -17,6 +17,13 @@ def get_recordings(request: Request) -> RecordingsResponse:
     return recordings_data.get_recordings(query)
 
 
+# @router.delete("/recording/:id", response_model_exclude_none=True)
+# def delete_recording(channelrequest: Request) -> RecordingsResponse:
+#     query = parse_params(dict(request.query_params))
+#     recordings_data = RecordingsData()
+#     return recordings_data.get_recordings(query)
+
+
 @router.put("/recordings")
 def schedule_recording(recording: RecordingRequest) -> ScheduledRecording:
     rec_type = recording_types[recording.type]

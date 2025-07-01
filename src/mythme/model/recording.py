@@ -3,6 +3,7 @@ from mythme.model.program import Program
 
 
 class Recording(Program):
+    recid: int
     status: str
     file: str
     size: int
