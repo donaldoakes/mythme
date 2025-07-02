@@ -1,0 +1,5 @@
+delete-recording:
+  url: ${mythtv.apiUrl}/Dvr/DeleteRecording?RecordedId=1407
+  method: POST
+  headers:
+    Accept: application/json

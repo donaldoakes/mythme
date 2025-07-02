@@ -31,7 +31,10 @@ class RecordingsData:
         total = 0
         if result and "ProgramList" in result and "Programs" in result["ProgramList"]:
             recordings = [
-                self.to_recording(prog) for prog in result["ProgramList"]["Programs"]
+                self.to_recording(prog)
+                for prog in result["ProgramList"]["Programs"]
+                if "RecGroup" not in prog["Recording"]
+                or prog["Recording"]["RecGroup"] != "Deleted"
             ]
             total = result["ProgramList"]["TotalAvailable"]
             logger.info(
@@ -97,6 +100,7 @@ class RecordingsData:
                 pass
 
         rec = prog["Recording"]
+
         recording = Recording(
             channel=channel,
             title=prog["Title"],

@@ -10,18 +10,20 @@ from mythme.utils.log import logger
 router = APIRouter()
 
 
-@router.get("/recordings", response_model_exclude_none=True)
+@router.get("/recorded", response_model_exclude_none=True)
 def get_recordings(request: Request) -> RecordingsResponse:
     query = parse_params(dict(request.query_params))
     recordings_data = RecordingsData()
     return recordings_data.get_recordings(query)
 
 
-# @router.delete("/recording/:id", response_model_exclude_none=True)
-# def delete_recording(channelrequest: Request) -> RecordingsResponse:
-#     query = parse_params(dict(request.query_params))
-#     recordings_data = RecordingsData()
-#     return recordings_data.get_recordings(query)
+@router.delete("/recorded/{recid}", response_model_exclude_none=True)
+def delete_recording(recid: int):
+    res = api_call(path=f"Dvr/DeleteRecording?RecordedId={recid}", method="POST")
+    if res and "bool" in res and res["bool"]:
+        return {"message": f"Deleted recid: {recid}"}
+    else:
+        raise HTTPException(status_code=404, detail=f"Recording not found: {recid}")
 
 
 @router.put("/recordings")

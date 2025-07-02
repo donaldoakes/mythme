@@ -1,0 +1,5 @@
+delete-recording:
+  url: ${apiUrl}/recorded/1407
+  method: DELETE
+  headers:
+    Accept: application/json
