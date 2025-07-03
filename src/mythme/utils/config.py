@@ -6,7 +6,7 @@ import xml.etree.ElementTree as ET
 import mariadb
 from dotenv import load_dotenv
 from yaml import safe_load
-from mythme.model.config import DbConnectConfig, MythmeConfig
+from mythme.model.config import DbConnectConfig, MythmeConfig, MythtvConfig
 from mythme.model.setting import Setting
 from mythme.utils.log import logger
 
@@ -73,8 +73,17 @@ def load_config() -> MythmeConfig:
     else:
         logger.debug(f"Loaded DB config: {db_config}")
 
-    api_base = cfg.get("mythtv_api_base") if "mythtv_api_base" in cfg else None
-    if api_base is None:
+    myth_config: Optional[MythtvConfig] = None
+    if "mythtv" in cfg:
+        mythtv = cfg.get("mythtv")
+        if mythtv and "api_base" in mythtv:
+            myth_config = MythtvConfig(
+                api_base=mythtv["api_base"],
+                storage_groups=mythtv["storage_groups"]
+                if "storage_groups" in mythtv
+                else {},
+            )
+    if myth_config is None:
         conn = mariadb.connect(
             host=db_config.host,
             port=db_config.port,
@@ -108,16 +117,20 @@ WHERE value in ('BackendStatusPort', 'BackendServerAddr')"""
                 port = get_setting("BackendStatusPort")
 
             if host and port:
-                api_base = f"http://{host.value}:{port.value}"
-                logger.info(f"Using MythTV API base: {api_base} from DB settings")
+                myth_config = MythtvConfig(
+                    api_base=f"http://{host.value}:{port.value}", storage_groups={}
+                )
+                logger.info(
+                    f"Using MythTV API base: {myth_config.api_base} from DB settings"
+                )
 
-    if api_base is None:
+    if myth_config is None:
         raise ValueError("No MythTV API base URL found")
 
     mythme_config = MythmeConfig(
         mythme_dir=f"{mythme_dir}",
         database=db_config,
-        mythtv_api_base=api_base,
+        mythtv=myth_config,
     )
 
     logger.debug(f"Loaded mythme config: {mythme_config}")

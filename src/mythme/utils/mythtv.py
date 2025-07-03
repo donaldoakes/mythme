@@ -24,7 +24,7 @@ def api_call(
     :rtype: dict
     """
 
-    url = f"{config.mythtv_api_base}/{path}"
+    url = f"{config.mythtv.api_base}/{path}"
     if params:
         url += "?" + "&".join([f"{k}={v}" for k, v in params.items()])
     logger.debug(f"{method}: {url}")
@@ -54,7 +54,7 @@ def get_channel_icon(channel_id: int) -> Optional[bytes]:
     :rtype: bytes if found, None otherwise
     """
 
-    url = f"{config.mythtv_api_base}/Guide/GetChannelIcon?ChanId={channel_id}"
+    url = f"{config.mythtv.api_base}/Guide/GetChannelIcon?ChanId={channel_id}"
     logger.debug(f"Retrieving icon for channel_id: {channel_id}")
 
     response = requests.get(url)
@@ -67,3 +67,36 @@ def get_channel_icon(channel_id: int) -> Optional[bytes]:
     else:
         logger.debug(f"Channel icon retrieval at {url} failed: {response.text}")
         raise Exception(f"{url} failed: {response.status_code}")
+
+
+myth_hostname: Optional[str] = None
+
+
+def get_myth_hostname() -> Optional[str]:
+    global myth_hostname
+    if not myth_hostname:
+        res = api_call("Myth/GetHostName")
+        if res and "String" in res:
+            myth_hostname = res["String"]
+    return myth_hostname
+
+
+def get_storage_group_dirs(group: str) -> Optional[list[str]]:
+    if group in config.mythtv.storage_groups:
+        return config.mythtv.storage_groups[group]
+    hostname = get_myth_hostname()
+    if hostname:
+        res = api_call(f"/Myth/GetStorageGroupDirs?GroupName={group}")
+        if (
+            res
+            and "StorageGroupDirList" in res
+            and "StorageGroupDirs" in res["StorageGroupDirList"]
+        ):
+            sg_dirs = res["StorageGroupDirList"]["StorageGroupDirs"]
+            dirs = [
+                dir["DirName"]
+                for dir in filter(lambda sgd: sgd["HostName"] == hostname, sg_dirs)
+            ]
+            config.mythtv.storage_groups[group] = dirs
+            return dirs
+    return None

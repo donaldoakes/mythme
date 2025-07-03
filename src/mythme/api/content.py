@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import Response, StreamingResponse
 from httpx import AsyncClient
 from mythme.utils.config import config
@@ -16,7 +16,7 @@ async def receive_file(path: str, group: str):
         async with AsyncClient() as client:
             async with client.stream(
                 "GET",
-                f"{config.mythtv_api_base}/Content/GetFile?FileName={path}&StorageGroup={group}",
+                f"{config.mythtv.api_base}/Content/GetFile?FileName={path}&StorageGroup={group}",
             ) as response:
                 if response.status_code != 200:
                     response_text = await response.aread()
