@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
-from mythme.model.video import Video, VideosResponse
+from mythme.model.video import Video, VideosResponse, WebRef
 from mythme.utils.mythtv import api_call, paging_params
 from mythme.utils.log import logger
 from mythme.utils.text import trim_article
@@ -63,12 +63,12 @@ class VideoData:
             video.subtitle = vid["SubTitle"]
         if "ReleaseDate" in vid and vid["ReleaseDate"]:
             video.year = datetime.fromisoformat(vid["ReleaseDate"]).year
-        if "Description" in vid and vid["Description"]:
+        if "Description" in vid and vid["Description"] and vid["Description"] != "None":
             video.description = vid["Description"]
         if "UserRating" in vid and vid["UserRating"]:
             video.rating = vid["UserRating"] / 2
         credits: list[Credit] = []
-        if "Director" in vid and vid["Director"]:
+        if "Director" in vid and vid["Director"] and vid["Director"] != "Unknown":
             credits.append(Credit(name=vid["Director"], role="director"))
         if "Cast" in vid and "CastMembers" in vid["Cast"]:
             for cm in vid["Cast"]["CastMembers"]:
@@ -77,7 +77,13 @@ class VideoData:
         if len(credits):
             video.credits = credits
         if "Coverart" in vid and vid["Coverart"]:
-            video.poster = vid["Coverart"]
-        if "Inetref" in vid and vid["Inetref"]:
-            video.webref = vid["Inetref"]
+            video.poster = vid["Coverart"][vid["Coverart"].rindex("/") + 1 :]
+        if "Inetref" in vid and vid["Inetref"] and vid["Inetref"] != "00000000":
+            video.webref = WebRef(site="imdb.com", ref=vid["Inetref"])
         return video
+
+    def clear_metadata(self):
+        # videometadata
+        # videocast
+        # videometadatacast
+        pass

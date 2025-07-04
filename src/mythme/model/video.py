@@ -4,7 +4,14 @@ from pydantic import BaseModel
 from mythme.model.credit import Credit
 
 
+class WebRef(BaseModel):
+    site: str
+    ref: str
+
+
 class Video(BaseModel):
+    """Similar to oakesville movie model"""
+
     id: int
     title: str
     file: str
@@ -14,7 +21,7 @@ class Video(BaseModel):
     rating: Optional[float] = None
     credits: Optional[list[Credit]] = None
     poster: Optional[str] = None
-    webref: Optional[str] = None
+    webref: Optional[WebRef] = None
 
 
 class VideosResponse(BaseModel):
