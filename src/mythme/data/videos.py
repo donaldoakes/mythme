@@ -1,4 +1,7 @@
 import time
+from datetime import datetime
+from typing import Optional
+from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.video import Video, VideosResponse
 from mythme.utils.mythtv import api_call, paging_params
@@ -35,6 +38,17 @@ class VideoData:
 
         return VideosResponse(videos=videos, total=total)
 
+    def get_video(self, id: int) -> Optional[Video]:
+        res = api_call(f"Video/GetVideo?Id={id}")
+        if (
+            res
+            and "VideoMetadataInfo" in res
+            and "Id" in res["VideoMetadataInfo"]
+            and res["VideoMetadataInfo"]["Id"]
+        ):
+            return self.to_video(res["VideoMetadataInfo"])
+        return None
+
     def sort(self, video: Video, sort: Sort) -> tuple:
         """Sort according to query."""
         title = trim_article(video.title.lower())
@@ -47,4 +61,23 @@ class VideoData:
         video = Video(id=vid["Id"], title=vid["Title"], file=vid["FileName"])
         if "SubTitle" in vid and vid["SubTitle"]:
             video.subtitle = vid["SubTitle"]
+        if "ReleaseDate" in vid and vid["ReleaseDate"]:
+            video.year = datetime.fromisoformat(vid["ReleaseDate"]).year
+        if "Description" in vid and vid["Description"]:
+            video.description = vid["Description"]
+        if "UserRating" in vid and vid["UserRating"]:
+            video.rating = vid["UserRating"] / 2
+        credits: list[Credit] = []
+        if "Director" in vid and vid["Director"]:
+            credits.append(Credit(name=vid["Director"], role="director"))
+        if "Cast" in vid and "CastMembers" in vid["Cast"]:
+            for cm in vid["Cast"]["CastMembers"]:
+                if "Role" in cm and cm["Role"] == "ACTOR":
+                    credits.append(Credit(name=cm["Name"], role="actor"))
+        if len(credits):
+            video.credits = credits
+        if "Coverart" in vid and vid["Coverart"]:
+            video.poster = vid["Coverart"]
+        if "Inetref" in vid and vid["Inetref"]:
+            video.webref = vid["Inetref"]
         return video

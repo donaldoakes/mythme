@@ -40,6 +40,13 @@ class RecordingsData:
 
         return RecordingsResponse(recordings=recordings, total=total)
 
+    def delete_recording(self, recid: int) -> bool:
+        res = api_call(path=f"Dvr/DeleteRecording?RecordedId={recid}", method="POST")
+        if res and "bool" in res and res["bool"]:
+            return True
+        else:
+            return False
+
     def sort(self, recording: Recording, sort: Sort) -> tuple:
         """Sort according to query."""
         title = trim_article(recording.title.lower())

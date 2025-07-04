@@ -13,14 +13,13 @@ router = APIRouter()
 @router.get("/recorded", response_model_exclude_none=True)
 def get_recordings(request: Request) -> RecordingsResponse:
     query = parse_params(dict(request.query_params))
-    recordings_data = RecordingsData()
-    return recordings_data.get_recordings(query)
+    return RecordingsData().get_recordings(query)
 
 
 @router.delete("/recorded/{recid}", response_model_exclude_none=True)
 def delete_recording(recid: int):
-    res = api_call(path=f"Dvr/DeleteRecording?RecordedId={recid}", method="POST")
-    if res and "bool" in res and res["bool"]:
+    res = RecordingsData().delete_recording(recid)
+    if res:
         return {"message": f"Deleted recid: {recid}"}
     else:
         raise HTTPException(status_code=404, detail=f"Recording not found: {recid}")

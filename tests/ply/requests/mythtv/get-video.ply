@@ -1,0 +1,5 @@
+get-video:
+  url: ${mythtv.apiUrl}/Video/GetVideo?Id=42460
+  method: GET
+  headers:
+    Accept: application/json
