@@ -11,8 +11,6 @@ from mythme.utils.media import (
 
 router = APIRouter()
 
-# TODO: file can be a path
-
 
 @router.get("/files/{path:path}")
 async def receive_file(path: str, group: str):
