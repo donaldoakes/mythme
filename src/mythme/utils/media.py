@@ -27,3 +27,13 @@ def media_file_path(group: str, path: str) -> Optional[Path]:
         if file_path.exists():
             return file_path
     return None
+
+
+def get_video_stream(video_path: str, chunk_size: int = 1024 * 1024):
+    """generator function"""
+    with open(video_path, "rb") as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if not chunk:
+                break
+            yield chunk

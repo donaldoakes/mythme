@@ -1,9 +1,13 @@
 from fastapi import APIRouter, Header, HTTPException
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import StreamingResponse
 from httpx import AsyncClient
 from mythme.utils.config import config
 from mythme.utils.log import logger
-from mythme.utils.media import VIDEO_CHUNK_SIZE, media_file_path, video_media_type
+from mythme.utils.media import (
+    get_video_stream,
+    media_file_path,
+    video_media_type,
+)
 
 router = APIRouter()
 
@@ -39,10 +43,7 @@ async def receive_file(path: str, group: str):
 
 @router.get("/videos/{path:path}")
 async def stream_video(path: str, group: str, range: str = Header(None)):
-    st, en = range.replace("bytes=", "").split("-")
-    start = int(st)
-    end = int(en) if en else start + VIDEO_CHUNK_SIZE
-
+    """Does not support seek. Browser cannot play video/mp2t (ts) streams."""
     video_path = media_file_path(group, path)
     if not video_path:
         raise HTTPException(
@@ -51,12 +52,5 @@ async def stream_video(path: str, group: str, range: str = Header(None)):
     media_type = video_media_type(path)
     if not media_type:
         raise HTTPException(status_code=400, detail=f"Unknown media type: {path}")
-    with open(video_path, "rb") as video:
-        video.seek(start)
-        data = video.read(end - start)
-        filesize = str(video_path.stat().st_size)
-        headers = {
-            "Content-Range": f"bytes {str(start)}-{str(end)}/{filesize}",
-            "Accept-Ranges": "bytes",
-        }
-        return Response(data, status_code=206, headers=headers, media_type=media_type)
+
+    return StreamingResponse(get_video_stream(str(video_path)), media_type=media_type)
