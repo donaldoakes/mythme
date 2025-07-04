@@ -11,7 +11,13 @@ class DbConnectConfig:
 
 
 @dataclass
+class MythtvConfig:
+    api_base: str
+    storage_groups: dict[str, list[str]]
+
+
+@dataclass
 class MythmeConfig:
     mythme_dir: str
     database: DbConnectConfig
-    mythtv_api_base: str
+    mythtv: MythtvConfig

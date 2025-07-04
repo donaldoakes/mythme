@@ -1,0 +1,5 @@
+get-host-name:
+  url: ${mythtv.apiUrl}/Myth/GetHostName
+  method: GET
+  headers:
+    Accept: application/json

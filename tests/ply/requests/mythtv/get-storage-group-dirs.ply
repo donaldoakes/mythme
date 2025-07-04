@@ -1,0 +1,5 @@
+get-storage-group-dirs:
+  url: ${mythtv.apiUrl}/Myth/GetStorageGroupDirs?GroupName=Default
+  method: GET
+  headers:
+    Accept: application/json
