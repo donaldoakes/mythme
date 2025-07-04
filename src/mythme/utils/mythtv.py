@@ -1,6 +1,7 @@
 import requests
 from typing import Optional, Literal
 from dotenv import load_dotenv
+from mythme.model.query import Query
 from mythme.utils.config import config
 from mythme.utils.log import logger
 
@@ -100,3 +101,17 @@ def get_storage_group_dirs(group: str) -> Optional[list[str]]:
             config.mythtv.storage_groups[group] = dirs
             return dirs
     return None
+
+
+def paging_params(query: Query) -> str:
+    params = ""
+    if query.paging.offset:
+        params += "&" if params else "?"
+        params += f"StartIndex={query.paging.offset}"
+    if query.paging.limit:
+        params += "&" if params else "?"
+        params += f"Count={query.paging.limit}"
+    if query.sort.order == "desc":
+        params += "&" if params else "?"
+        params += "Descending=true"
+    return params

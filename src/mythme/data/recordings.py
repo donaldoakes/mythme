@@ -6,7 +6,7 @@ from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import ScheduledRecording
-from mythme.utils.mythtv import api_call
+from mythme.utils.mythtv import api_call, paging_params
 from mythme.utils.log import logger
 from mythme.utils.text import trim_article
 
@@ -15,19 +15,8 @@ class RecordingsData:
     scheduled_recordings: list[ScheduledRecording] = []
 
     def get_recordings(self, query: Query) -> RecordingsResponse:
-        params = ""
-        if query.paging.offset:
-            params += "&" if params else "?"
-            params += f"StartIndex={query.paging.offset}"
-        if query.paging.limit:
-            params += "&" if params else "?"
-            params += f"Count={query.paging.limit}"
-        if query.sort.order == "desc":
-            params += "&" if params else "?"
-            params += "Descending=true"
-
         before = time.time()
-        result = api_call("Dvr/GetRecordedList" + params)
+        result = api_call("Dvr/GetRecordedList" + paging_params(query))
         total = 0
         if result and "ProgramList" in result and "Programs" in result["ProgramList"]:
             recordings = [
