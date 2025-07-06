@@ -116,7 +116,7 @@ class VideoData:
         if video.description:
             vid["Plot"] = video.description
         if video.rating:
-            vid["UserRating"] = video.rating * 2
+            vid["UserRating"] = int(video.rating * 2)
         if video.credits:
             actors = [
                 a.name for a in filter(lambda c: c.role == "actor", video.credits)
