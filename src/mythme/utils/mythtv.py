@@ -46,6 +46,16 @@ def api_call(
         raise Exception(f"{method} {url} failed: {response.status_code}")
 
 
+def api_update(
+    path: str, method: ApiMethod = "POST", params: Optional[dict[str, str]] = None
+) -> bool:
+    res = api_call(path, method, params)
+    if res and "bool" in res and res["bool"]:
+        return True
+    else:
+        return False
+
+
 def get_channel_icon(channel_id: int) -> Optional[bytes]:
     """Retrieve channel icon content.
 

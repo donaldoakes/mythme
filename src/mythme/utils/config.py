@@ -79,6 +79,7 @@ def load_config() -> MythmeConfig:
         if mythtv and "api_base" in mythtv:
             myth_config = MythtvConfig(
                 api_base=mythtv["api_base"],
+                categories=mythtv["categories"] if "categories" in mythtv else {},
                 storage_groups=mythtv["storage_groups"]
                 if "storage_groups" in mythtv
                 else {},
@@ -118,7 +119,9 @@ WHERE value in ('BackendStatusPort', 'BackendServerAddr')"""
 
             if host and port:
                 myth_config = MythtvConfig(
-                    api_base=f"http://{host.value}:{port.value}", storage_groups={}
+                    api_base=f"http://{host.value}:{port.value}",
+                    categories={},
+                    storage_groups={},
                 )
                 logger.info(
                     f"Using MythTV API base: {myth_config.api_base} from DB settings"

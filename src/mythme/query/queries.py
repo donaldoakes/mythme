@@ -53,7 +53,7 @@ def parse_params(params: dict[str, str]) -> Query:
     if "limit" in params and params["limit"].isnumeric():
         lim = int(params["limit"])
         if lim > 0:
-            paging.limit = 500 if lim > 500 else lim
+            paging.limit = 5000 if lim > 5000 else lim
 
     debug = "debug" in params and params["debug"] == "true"
 

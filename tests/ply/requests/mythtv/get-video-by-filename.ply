@@ -1,5 +1,0 @@
-get-video-by-filename:
-  url: ${mythtv.apiUrl}/Video/GetVideoByFileName?FileName=Pre-Code/Age of Consent.mpg
-  method: GET
-  headers:
-    Accept: application/json

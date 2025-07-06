@@ -13,6 +13,7 @@ class DbConnectConfig:
 @dataclass
 class MythtvConfig:
     api_base: str
+    categories: dict[str, str]
     storage_groups: dict[str, list[str]]
 
 

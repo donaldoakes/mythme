@@ -1,0 +1,5 @@
+update-video-metadata:
+  url: ${mythtv.apiUrl}/Video/UpdateVideoMetadata?Id=42460&Director=One Guy, Another Guy&Cast=Groucho Marx,Bugs Bunny
+  method: POST
+  headers:
+    Accept: application/json

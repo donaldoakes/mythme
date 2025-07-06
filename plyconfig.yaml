@@ -1,4 +1,4 @@
-testsLocation: tests/ply
+testsLocation: tests
 
 valuesFiles:
   tests/values/localhost.json: true

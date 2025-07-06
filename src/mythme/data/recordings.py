@@ -6,7 +6,7 @@ from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import ScheduledRecording
-from mythme.utils.mythtv import api_call, paging_params
+from mythme.utils.mythtv import api_call, api_update, paging_params
 from mythme.utils.log import logger
 from mythme.utils.text import trim_article
 
@@ -41,11 +41,7 @@ class RecordingsData:
         return RecordingsResponse(recordings=recordings, total=total)
 
     def delete_recording(self, recid: int) -> bool:
-        res = api_call(path=f"Dvr/DeleteRecording?RecordedId={recid}", method="POST")
-        if res and "bool" in res and res["bool"]:
-            return True
-        else:
-            return False
+        return api_update(path=f"Dvr/DeleteRecording?RecordedId={recid}")
 
     def sort(self, recording: Recording, sort: Sort) -> tuple:
         """Sort according to query."""

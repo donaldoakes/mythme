@@ -4,9 +4,15 @@ from typing import Optional
 from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.video import Video, VideosResponse, WebRef
-from mythme.utils.mythtv import api_call, paging_params
-from mythme.utils.log import logger
+from mythme.utils.mythtv import (
+    api_call,
+    api_update,
+    get_storage_group_dirs,
+    paging_params,
+)
 from mythme.utils.text import trim_article
+from mythme.utils.config import config
+from mythme.utils.log import logger
 
 
 class VideoData:
@@ -30,7 +36,7 @@ class VideoData:
         else:
             raise Exception("Failed to retrieve videos")
 
-        if query.sort.name and query.sort.name != "start":
+        if query.sort.name and query.sort.name != "id":
             videos.sort(
                 key=lambda vid: self.sort(vid, query.sort),
                 reverse=True if query.sort.order == "desc" else False,
@@ -49,10 +55,29 @@ class VideoData:
             return self.to_video(res["VideoMetadataInfo"])
         return None
 
+    def get_video_by_file(self, file: str) -> Optional[Video]:
+        try:
+            res = api_call(f"Video/GetVideoByFileName?FileName={file}")
+            if (
+                res
+                and "VideoMetadataInfo" in res
+                and "Id" in res["VideoMetadataInfo"]
+                and res["VideoMetadataInfo"]["Id"]
+            ):
+                return self.to_video(res["VideoMetadataInfo"])
+        except Exception as e:
+            logger.debug(f"Error retrieving video by file name: {e}")
+        return None
+
+    def update_video(self, video: Video) -> bool:
+        return api_update("Video/UpdateVideoMetadata", params=self.from_video(video))
+
     def sort(self, video: Video, sort: Sort) -> tuple:
         """Sort according to query."""
-        title = trim_article(video.title.lower())
-        if sort.name == "title":
+        if sort.name == "file":
+            return (video.file.lower(), video.id)
+        elif sort.name == "title":
+            title = trim_article(video.title.lower())
             return (title, video.id)
         else:
             raise ValueError(f"Unsupported sort: {sort.name}")
@@ -81,6 +106,47 @@ class VideoData:
         if "Inetref" in vid and vid["Inetref"] and vid["Inetref"] != "00000000":
             video.webref = WebRef(site="imdb.com", ref=vid["Inetref"])
         return video
+
+    def from_video(self, video: Video) -> dict:
+        vid = {"Id": video.id, "Title": video.title}
+        if video.subtitle:
+            vid["SubTitle"] = video.subtitle
+        if video.year:
+            vid["ReleaseDate"] = f"{video.year}-01-01T00:00:00Z"
+        if video.description:
+            vid["Plot"] = video.description
+        if video.rating:
+            vid["UserRating"] = video.rating * 2
+        if video.credits:
+            actors = [
+                a.name for a in filter(lambda c: c.role == "actor", video.credits)
+            ]
+            if len(actors):
+                vid["Cast"] = ",".join(actors)
+            directors = [
+                d.name for d in filter(lambda c: c.role == "director", video.credits)
+            ]
+            if len(directors):
+                vid["Director"] = ", ".join(directors)
+        if (
+            video.poster
+            and video.category
+            and video.category in config.mythtv.categories
+        ):
+            ca_sgs = get_storage_group_dirs("Coverart")
+            if ca_sgs and len(ca_sgs):
+                ca_sg = ca_sgs[0]
+                cat_path = (
+                    config.mythtv.categories[video.category]
+                    if video.category in config.mythtv.categories
+                    else None
+                )
+                if cat_path:
+                    vid["Coverart"] = f"{ca_sg}/{cat_path}/{video.poster}"
+        if video.webref:
+            vid["Inetref"] = video.webref.ref
+
+        return vid
 
     def clear_metadata(self):
         # videometadata
