@@ -113,6 +113,7 @@ class VideoData:
             vid["SubTitle"] = video.subtitle
         if video.year:
             vid["ReleaseDate"] = f"{video.year}-01-01T00:00:00Z"
+            vid["Year"] = video.year
         if video.description:
             vid["Plot"] = video.description
         if video.rating:
@@ -142,7 +143,9 @@ class VideoData:
                     else None
                 )
                 if cat_path:
-                    vid["Coverart"] = f"{ca_sg}/{cat_path}/{video.poster}"
+                    vid["Coverart"] = vid["CoverFile"] = (
+                        f"{ca_sg}/{cat_path}/{video.poster}"
+                    )
         if video.webref:
             vid["Inetref"] = video.webref.ref
 
