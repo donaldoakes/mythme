@@ -1,5 +1,7 @@
 SELECT * FROM videometadata where intid in (53170, 52656)
 
+SELECT * FROM videometadata where title = 'Strip - Adam Ant'
+
 DELETE FROM videometadatacast
 
 INSERT INTO videometadata

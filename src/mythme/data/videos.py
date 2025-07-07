@@ -104,6 +104,7 @@ VALUES
         sg_dirs = get_storage_group_dirs("Videos")
         if not sg_dirs or len(sg_dirs) == 0:
             return 0
+        logger.info(f"Checking for unfound videos: {sg_dirs}")
         count = 0
         with get_connection() as conn:
             with conn.cursor() as cursor:
@@ -111,7 +112,6 @@ VALUES
                 for intid, filename in cursor.fetchall():
                     file_exists = False
                     for sg_dir in sg_dirs:
-                        logger.info(f"OS PATH: {sg_dir}/{filename}")
                         if os.path.exists(f"{sg_dir}/{filename}"):
                             file_exists = True
                             break
@@ -175,7 +175,7 @@ VALUES
             "filename": file,
             "title": self.get_title(file),
             "hash": gen_hash(file),
-            "contenttype": "MUSICVIDEO",
+            "contenttype": "MOVIE",
         }
 
     def info_sql_data(
@@ -231,7 +231,7 @@ VALUES
             "playcount": 0,
             "season": 0,
             "episode": 0,
-            "showlevel": 0,
+            "showlevel": 1,
             "childid": -1,
             "browse": 1,
             "watched": 0,
