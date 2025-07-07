@@ -1,7 +1,13 @@
 from fastapi import APIRouter, Request, HTTPException
 from mythme.data.videos import VideoData
 from mythme.model.api import MessageResponse
-from mythme.model.video import Video, VideoSyncRequest, VideosResponse
+from mythme.model.video import (
+    DeleteMetadataResponse,
+    Video,
+    VideoScanResponse,
+    VideoSyncRequest,
+    VideosResponse,
+)
 from mythme.query.queries import parse_params
 from mythme.utils.config import config
 from mythme.utils.log import logger
@@ -24,17 +30,21 @@ def get_video(id: int) -> Video:
 
 
 @router.delete("/videos", response_model_exclude_none=True)
-def delete_video_metadata() -> MessageResponse:
+def delete_video_metadata() -> DeleteMetadataResponse:
     """Deletes all video metadata from the database.
     Does not delete video files"""
     rows = VideoData().delete_video_metadata()
-    return MessageResponse(message=f"Metadata deleted for {rows} videos")
+    return DeleteMetadataResponse(deleted=rows)
 
 
 @router.post("/video-scan", response_model_exclude_none=True)
-def scan_videos() -> MessageResponse:
-    rows = VideoData().scan_videos()
-    return MessageResponse(message=f"Scan found {rows} new videos")
+def scan_videos() -> VideoScanResponse:
+    result = VideoData().scan_videos()
+    if result is None:
+        raise HTTPException(status_code=404, detail="No video storage group dirs found")
+
+    (added, deleted) = result
+    return VideoScanResponse(added=added, deleted=deleted)
 
 
 @router.patch("/videos", response_model_exclude_none=True)

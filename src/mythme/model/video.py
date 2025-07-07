@@ -25,11 +25,21 @@ class Video(BaseModel):
     """ Full-path poster file """
     poster: Optional[str] = None
     webref: Optional[WebRef] = None
+    medium: Optional[str] = None
 
 
 class VideosResponse(BaseModel):
     videos: list[Video]
     total: int
+
+
+class DeleteMetadataResponse(BaseModel):
+    deleted: int
+
+
+class VideoScanResponse(BaseModel):
+    added: list[str]
+    deleted: list[str]
 
 
 class VideoSyncRequest(BaseModel):

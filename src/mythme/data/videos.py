@@ -2,7 +2,7 @@ import os
 import time
 import textwrap
 from datetime import datetime
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.video import Video, VideosResponse, WebRef
@@ -21,18 +21,38 @@ from mythme.utils.log import logger
 
 class VideoData:
     exists_sql = "SELECT 1 FROM videometadata WHERE filename = %s LIMIT 1"
-    delete_sql = "DELETE FROM videometadata WHERE intid = %s"
-    insert_sql = """INSERT INTO videometadata
-(host, filename, title, hash, contenttype,
-year, releasedate, userrating, inetref, coverfile, director,
-subtitle, collectionref, homepage, rating, length, playcount, season, episode, showlevel, childid, browse, watched, processed, category)
-VALUES
-(%(host)s, %(filename)s, %(title)s, %(hash)s, %(contenttype)s,
-%(year)s, %(releasedate)s, %(userrating)s, %(inetref)s, %(coverfile)s, %(director)s,
-%(subtitle)s, %(collectionref)s, %(homepage)s, %(rating)s, %(length)s, %(playcount)s, %(season)s, %(episode)s, %(showlevel)s, %(childid)s, %(browse)s, %(watched)s, %(processed)s, %(category)s)
-"""  # noqa: E501
+    fields = [
+        "host",
+        "filename",
+        "title",
+        "hash",
+        "contenttype",
+        "year",
+        "releasedate",
+        "userrating",
+        "inetref",
+        "coverfile",
+        "director",
+        "subtitle",
+        "collectionref",
+        "homepage",
+        "rating",
+        "length",
+        "playcount",
+        "season",
+        "episode",
+        "showlevel",
+        "childid",
+        "browse",
+        "watched",
+        "processed",
+        "category",
+    ]
+
+    values = [f"%({field})s" for field in fields]
 
     def get_videos(self, query: Query) -> VideosResponse:
+        """Uses the MythTV API"""
         before = time.time()
         result = api_call("Video/GetVideoList" + paging_params(query))
         total = 0
@@ -61,6 +81,7 @@ VALUES
         return VideosResponse(videos=videos, total=total)
 
     def get_video(self, id: int) -> Optional[Video]:
+        """Uses the MythTV API"""
         res = api_call(f"Video/GetVideo?Id={id}")
         if (
             res
@@ -72,6 +93,7 @@ VALUES
         return None
 
     def get_video_by_file(self, file: str) -> Optional[Video]:
+        """Uses the MythTV API"""
         try:
             res = api_call(f"Video/GetVideoByFileName?FileName={file}")
             if (
@@ -100,53 +122,124 @@ VALUES
                 cursor.execute("DELETE FROM videocast")
         return rows
 
-    def delete_unfound(self) -> int:
+    def get_storage_group_dirs(self) -> list[str]:
         sg_dirs = get_storage_group_dirs("Videos")
         if not sg_dirs or len(sg_dirs) == 0:
-            return 0
-        logger.info(f"Checking for unfound videos: {sg_dirs}")
-        count = 0
+            logger.error("No Videos storage group found")
+            return []
+        return sg_dirs
+
+    def get_category_dir(self, video: Video) -> str:
+        if video.category and video.category in config.mythtv.categories:
+            return f"{config.mythtv.categories[video.category]}"
+        else:
+            logger.error(f"No directory for category: '{video.category}'")
+            return ""
+
+    def get_db_filepaths(self) -> list[str]:
         with get_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT intid, filename FROM videometadata")
-                for intid, filename in cursor.fetchall():
+                cursor.execute("SELECT filename FROM videometadata")
+                return [filename for (filename,) in cursor.fetchall()]
+
+    def delete_unfound(self) -> Optional[list[str]]:
+        """Updates the database directly. Returns a list of deleted video filepaths"""
+        sg_dirs = self.get_storage_group_dirs()
+        if not len(sg_dirs):
+            return None
+        filepaths = self.get_db_filepaths()
+        deleted: list[str] = []
+        with get_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                logger.info(f"Checking for unfound videos in directories: {sg_dirs}")
+                for filepath in filepaths:
                     file_exists = False
                     for sg_dir in sg_dirs:
-                        if os.path.exists(f"{sg_dir}/{filename}"):
+                        if os.path.exists(f"{sg_dir}/{filepath}"):
                             file_exists = True
                             break
                     if not file_exists:
-                        logger.info(f"Deleting metadata for unfound file: {filename}")
-                        cursor.execute(self.delete_sql, (intid,))
-                        count += 1
-        return count
+                        logger.info(f"Deleting metadata for unfound file: {filepath}")
+                        cursor.execute(
+                            "DELETE FROM videometadata WHERE filename = %s", (filepath,)
+                        )
+                        deleted.append(filepath)
+        return deleted
 
-    def scan_videos(self) -> int:
-        self.delete_unfound()
+    def get_insert_sql(self) -> str:
+        return f"INSERT INTO videometadata ({", ".join(self.fields)}) VALUES ({", ".join(self.values)})"  # noqa: E501
 
-        sg_dirs = get_storage_group_dirs("Videos")
-        if not sg_dirs or len(sg_dirs) == 0:
-            return 0
-        count = 0
+    def get_update_sql(self, filename: str) -> str:
+        return (
+            "UPDATE videometadata SET "
+            + ", ".join(
+                [f"{field} = {self.values[i]}" for i, field in enumerate(self.fields)]
+            )
+            + f" WHERE filename = '{filename}'"
+        )
+
+    def scan_videos(self) -> Optional[Tuple[list[str], list[str]]]:
+        """Crawls file system and updates the database. Returns a tuple with added/deleted filepaths."""
+        deleted = self.delete_unfound()
+        if deleted is None:
+            return None
+        sg_dirs = self.get_storage_group_dirs()
+        if not len(sg_dirs):
+            return None
+        added: list[str] = []
+        filepaths = self.get_db_filepaths()
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 for sg_dir in sg_dirs:
-                    logger.info(f"Scanning for videos in directory: {sg_dir}")
-
+                    logger.info(f"Scanning for new videos in directory: {sg_dir}")
                     for root, _dirs, files in os.walk(sg_dir):
                         for file in files:
                             filepath = os.path.join(root[len(sg_dir) + 1 :], file)
-                            cursor.execute(self.exists_sql, (filepath,))
-                            row_exists = cursor.fetchone() is not None
-                            if not row_exists:
+                            if filepath not in filepaths:
                                 logger.info(f"Found new video file: {filepath}")
                                 data = (
                                     self.base_sql_data(filepath)
                                     | self.info_sql_data()
                                     | self.unused_sql_data()
                                 )
-                                cursor.execute(self.insert_sql, data)
-                                count += 1
+                                sql = self.get_insert_sql()
+                                cursor.execute(sql, data)
+                                added.append(filepath)
+        return (added, deleted)
+
+    def update_video_metadata(self, videos: list[Video]) -> int:
+        """Updates matching videos in the database"""
+        sg_dirs = self.get_storage_group_dirs()
+        if not len(sg_dirs):
+            return 0
+        count = 0
+        with get_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                for vid in videos:
+                    catpath = self.get_category_dir(vid)
+                    ext = vid.medium.lower() if vid.medium else "vid"
+                    filepath = (
+                        f"{catpath}/{vid.title}.{ext}"
+                        if catpath
+                        else f"{vid.title}.{ext}"
+                    )
+                    cursor.execute(self.exists_sql, (filepath,))
+                    row_exists = cursor.fetchone() is not None
+                    if row_exists:
+                        logger.info(f"Update existing video title: {vid.title}")
+                        sql = self.get_update_sql(filepath)
+                    else:
+                        logger.info(f"Insert new video title: {vid.title}")
+                        sql = self.get_insert_sql()
+                    data = (
+                        self.base_sql_data(filepath)
+                        | self.info_sql_data()
+                        | self.unused_sql_data()
+                        | {"contenttype": "MOVIE"}
+                    )
+                    cursor.execute(sql, data)
+                    count += 1
+
         return count
 
     def sort(self, video: Video, sort: Sort) -> tuple:
@@ -175,7 +268,7 @@ VALUES
             "filename": file,
             "title": self.get_title(file),
             "hash": gen_hash(file),
-            "contenttype": "MOVIE",
+            "contenttype": "MUSICVIDEO",
         }
 
     def info_sql_data(
@@ -183,18 +276,15 @@ VALUES
     ) -> dict[str, Union[str, int, float]]:
         if video:
             coverfile = ""
-            catdir = ""
             if video.poster:
-                if video.category:
-                    catdir = (
-                        f"/{config.mythtv.categories[video.category]}"
-                        if video.category in config.mythtv.categories
-                        else ""
-                    )
+                catpre = self.get_category_dir(video)
+                if catpre:
+                    catpre = f"/{catpre}"
                 cov_sg_dirs = get_storage_group_dirs("Coverart")
                 if cov_sg_dirs and len(cov_sg_dirs) > 0:
-                    coverfile = f"{cov_sg_dirs[0]}{catdir}/{video.poster}"
-                    raise ValueError("Coverart storage group not found")
+                    coverfile = f"{cov_sg_dirs[0]}{catpre}/{video.poster}"
+                else:
+                    logger.error("Coverart storage group not found")
             director = ""
             if video.credits:
                 directors = [
@@ -307,9 +397,3 @@ VALUES
             vid["Inetref"] = video.webref.ref
 
         return vid
-
-    def clear_metadata(self):
-        # videometadata
-        # videocast
-        # videometadatacast
-        pass
