@@ -1,0 +1,5 @@
+post-video-scan:
+  url: ${apiUrl}/video-scan
+  method: POST
+  headers:
+    Accept: application/json
