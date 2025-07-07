@@ -142,6 +142,19 @@ class VideoData:
                 cursor.execute("SELECT filename FROM videometadata")
                 return [filename for (filename,) in cursor.fetchall()]
 
+    def get_fs_filepaths(self) -> Optional[list[str]]:
+        sg_dirs = self.get_storage_group_dirs()
+        if not len(sg_dirs):
+            logger.error("No video storage group directories found")
+            return None
+        logger.info(f"Scanning video storage group directories: {sg_dirs}")
+        filepaths: list[str] = []
+        for sg_dir in sg_dirs:
+            for root, _dirs, files in os.walk(sg_dir):
+                for file in files:
+                    filepaths.append(os.path.join(root[len(sg_dir) + 1 :], file))
+        return filepaths
+
     def get_insert_sql(self) -> str:
         return f"INSERT INTO videometadata ({", ".join(self.fields)}) VALUES ({", ".join(self.values)})"  # noqa: E501
 
@@ -156,22 +169,15 @@ class VideoData:
 
     def scan_videos(self) -> Optional[Tuple[list[str], list[str]]]:
         """Crawls file system and updates the database. Returns a tuple with added/deleted filepaths."""
-        sg_dirs = self.get_storage_group_dirs()
-        if not len(sg_dirs):
+        fs_filepaths = self.get_fs_filepaths()
+        if fs_filepaths is None:
             return None
-
-        logger.info(f"Checking for unfound videos in directories: {sg_dirs}")
         db_filepaths = self.get_db_filepaths()
-        filepaths: list[str] = []
-        for sg_dir in sg_dirs:
-            for root, _dirs, files in os.walk(sg_dir):
-                for file in files:
-                    filepaths.append(os.path.join(root[len(sg_dir) + 1 :], file))
         deleted: list[str] = []
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 for db_filepath in db_filepaths:
-                    file_exists = db_filepath in filepaths
+                    file_exists = db_filepath in fs_filepaths
                     if not file_exists:
                         logger.info(
                             f"Deleting metadata for unfound file: {db_filepath}"
@@ -185,19 +191,17 @@ class VideoData:
         added: list[str] = []
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
-                for sg_dir in sg_dirs:
-                    logger.info(f"Scanning for new videos in directory: {sg_dir}")
-                    for filepath in filepaths:
-                        if filepath not in db_filepaths:
-                            logger.info(f"Found new video file: {filepath}")
-                            data = (
-                                self.base_sql_data(filepath)
-                                | self.info_sql_data()
-                                | self.unused_sql_data()
-                            )
-                            sql = self.get_insert_sql()
-                            cursor.execute(sql, data)
-                            added.append(filepath)
+                for fs_filepath in fs_filepaths:
+                    if fs_filepath not in db_filepaths:
+                        logger.info(f"Found new video file: {fs_filepath}")
+                        data = (
+                            self.base_sql_data(fs_filepath)
+                            | self.info_sql_data()
+                            | self.unused_sql_data()
+                        )
+                        sql = self.get_insert_sql()
+                        cursor.execute(sql, data)
+                        added.append(fs_filepath)
         return (added, deleted)
 
     def update_video_metadata(self, videos: list[Video]) -> int:
