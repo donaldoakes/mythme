@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Request, HTTPException
 from mythme.data.videos import VideoData
-from mythme.model.api import MessageResponse
 from mythme.model.video import (
     DeleteMetadataResponse,
     Video,
+    VideoScanRequest,
     VideoScanResponse,
     VideoSyncRequest,
+    VideoSyncResponse,
     VideosResponse,
 )
 from mythme.query.queries import parse_params
-from mythme.utils.config import config
-from mythme.utils.log import logger
 
 router = APIRouter()
 
@@ -38,7 +37,7 @@ def delete_video_metadata() -> DeleteMetadataResponse:
 
 
 @router.post("/video-scan", response_model_exclude_none=True)
-def scan_videos() -> VideoScanResponse:
+def scan_videos(request: VideoScanRequest) -> VideoScanResponse:
     result = VideoData().scan_videos()
     if result is None:
         raise HTTPException(status_code=404, detail="No video storage group dirs found")
@@ -48,29 +47,9 @@ def scan_videos() -> VideoScanResponse:
 
 
 @router.patch("/videos", response_model_exclude_none=True)
-def sync_videos(sync_request: VideoSyncRequest) -> MessageResponse:
-    video_data = VideoData()
-    for vid in sync_request.videos:
-        cat_path = (
-            config.mythtv.categories[vid.category]
-            if vid.category in config.mythtv.categories
-            else None
-        )
-        if not cat_path:
-            raise HTTPException(
-                status_code=404, detail=f"Category not configured: {vid.category}"
-            )
-        file = f"{cat_path}/{vid.title}.mpg"
-        video = video_data.get_video_by_file(file)
-        if video:
-            vid.id = video.id
-            vid.file = video.file
-            logger.info(f'Updating {cat_path}: "{video.title}"')
-            if not video_data.update_video(vid):
-                logger.error(f"Failed to update {cat_path}: {video.title}")
-
-        else:
-            # TODO add stub
-            logger.info(f'Creating {cat_path} stub: "{vid.title}"')
-
-    return MessageResponse(message="Synced some videos")
+def sync_videos(sync_request: VideoSyncRequest) -> VideoSyncResponse:
+    result = VideoData().sync_video_metadata(sync_request.videos)
+    if result is None:
+        raise HTTPException(status_code=404, detail="No video storage group dirs found")
+    (updated, missing) = result
+    return VideoSyncResponse(updated=updated, missing=missing)

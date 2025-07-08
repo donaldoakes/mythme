@@ -20,7 +20,6 @@ from mythme.utils.log import logger
 
 
 class VideoData:
-    exists_sql = "SELECT 1 FROM videometadata WHERE filename = %s LIMIT 1"
     fields = [
         "host",
         "filename",
@@ -129,12 +128,11 @@ class VideoData:
             return []
         return sg_dirs
 
-    def get_category_dir(self, video: Video) -> str:
+    def get_category_dir(self, video: Video) -> Optional[str]:
         if video.category and video.category in config.mythtv.categories:
             return f"{config.mythtv.categories[video.category]}"
         else:
-            logger.error(f"No directory for category: '{video.category}'")
-            return ""
+            return None
 
     def get_db_filepaths(self) -> list[str]:
         with get_connection() as conn:
@@ -158,13 +156,13 @@ class VideoData:
     def get_insert_sql(self) -> str:
         return f"INSERT INTO videometadata ({", ".join(self.fields)}) VALUES ({", ".join(self.values)})"  # noqa: E501
 
-    def get_update_sql(self, filename: str) -> str:
+    def get_update_sql(self) -> str:
         return (
             "UPDATE videometadata SET "
             + ", ".join(
                 [f"{field} = {self.values[i]}" for i, field in enumerate(self.fields)]
             )
-            + f" WHERE filename = '{filename}'"
+            + " WHERE filename = %(filename)s"
         )
 
     def scan_videos(self) -> Optional[Tuple[list[str], list[str]]]:
@@ -204,40 +202,51 @@ class VideoData:
                         added.append(fs_filepath)
         return (added, deleted)
 
-    def update_video_metadata(self, videos: list[Video]) -> int:
+    def sync_video_metadata(
+        self, videos: list[Video]
+    ) -> Optional[Tuple[list[str], list[str]]]:
         """Updates matching videos in the database"""
         sg_dirs = self.get_storage_group_dirs()
         if not len(sg_dirs):
-            return 0
-        count = 0
+            return None
+        updated: list[str] = []
+        missing: list[str] = []
+        db_filepaths = self.get_db_filepaths()
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 for vid in videos:
-                    catpath = self.get_category_dir(vid)
-                    ext = vid.medium.lower() if vid.medium else "vid"
-                    filepath = (
-                        f"{catpath}/{vid.title}.{ext}"
-                        if catpath
-                        else f"{vid.title}.{ext}"
-                    )
-                    cursor.execute(self.exists_sql, (filepath,))
-                    row_exists = cursor.fetchone() is not None
+                    catdir = self.get_category_dir(vid)
+                    if not catdir:
+                        logger.error(
+                            f"No category dir for '{vid.title}': {vid.category}"
+                        )
+                        missing.append(vid.title)
+                        continue
+                    if not vid.medium or vid.medium == "DVD":
+                        logger.debug(
+                            f"Unsupported medium for '{vid.title}': {vid.medium}"
+                        )
+                        missing.append(vid.title)
+                        continue
+                    ext = vid.medium.lower()
+                    filepath = f"{catdir}/{vid.title}.{ext}"
+                    row_exists = filepath in db_filepaths
                     if row_exists:
                         logger.info(f"Update existing video title: {vid.title}")
-                        sql = self.get_update_sql(filepath)
+                        sql = self.get_update_sql()
+                        data = (
+                            self.base_sql_data(filepath)
+                            | self.info_sql_data()
+                            | self.unused_sql_data()
+                            | {"contenttype": "MOVIE"}
+                        )
+                        cursor.execute(sql, data)
+                        updated.append(filepath)
                     else:
-                        logger.info(f"Insert new video title: {vid.title}")
-                        sql = self.get_insert_sql()
-                    data = (
-                        self.base_sql_data(filepath)
-                        | self.info_sql_data()
-                        | self.unused_sql_data()
-                        | {"contenttype": "MOVIE"}
-                    )
-                    cursor.execute(sql, data)
-                    count += 1
+                        logger.info(f"Video missing from database: {filepath}")
+                        missing.append(filepath)
 
-        return count
+        return (updated, missing)
 
     def sort(self, video: Video, sort: Sort) -> tuple:
         """Sort according to query."""
@@ -274,14 +283,17 @@ class VideoData:
         if video:
             coverfile = ""
             if video.poster:
-                catpre = self.get_category_dir(video)
-                if catpre:
-                    catpre = f"/{catpre}"
-                cov_sg_dirs = get_storage_group_dirs("Coverart")
-                if cov_sg_dirs and len(cov_sg_dirs) > 0:
-                    coverfile = f"{cov_sg_dirs[0]}{catpre}/{video.poster}"
+                catdir = self.get_category_dir(video)
+                if catdir:
+                    cov_sg_dirs = get_storage_group_dirs("Coverart")
+                    if cov_sg_dirs and len(cov_sg_dirs) > 0:
+                        coverfile = f"{cov_sg_dirs[0]}/{catdir}/{video.poster}"
+                    else:
+                        logger.error("Coverart storage group not found")
                 else:
-                    logger.error("Coverart storage group not found")
+                    logger.error(
+                        f"No category dir for '{video.title}': {video.category}"
+                    )
             director = ""
             if video.credits:
                 directors = [

@@ -37,6 +37,10 @@ class DeleteMetadataResponse(BaseModel):
     deleted: int
 
 
+class VideoScanRequest(BaseModel):
+    pass
+
+
 class VideoScanResponse(BaseModel):
     added: list[str]
     deleted: list[str]
@@ -44,3 +48,8 @@ class VideoScanResponse(BaseModel):
 
 class VideoSyncRequest(BaseModel):
     videos: list[Video]
+
+
+class VideoSyncResponse(BaseModel):
+    updated: list[str]
+    missing: list[str]
