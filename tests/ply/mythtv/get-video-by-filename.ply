@@ -1,0 +1,5 @@
+get-video-by-filename:
+  url: ${mythtv.apiUrl}/Video/GetVideoByFileName?FileName=Pre-Code/A Notorious Affair.mpg
+  method: GET
+  headers:
+    Accept: application/json

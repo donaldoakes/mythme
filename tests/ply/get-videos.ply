@@ -1,0 +1,5 @@
+get-videos:
+  url: ${apiUrl}/videos?limit=5000&sort=file
+  method: GET
+  headers:
+    Accept: application/json

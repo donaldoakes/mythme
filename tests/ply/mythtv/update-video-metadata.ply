@@ -1,0 +1,5 @@
+update-video-metadata:
+  url: ${mythtv.apiUrl}/Video/UpdateVideoMetadata?Id=111650&Director=William A Seiter&Cast=Groucho Marx, Frank Albertson, Ricardo Cortez, Joan Blondell, Frank Darien&Title=Big Business Girl
+  method: POST
+  headers:
+    Accept: application/json

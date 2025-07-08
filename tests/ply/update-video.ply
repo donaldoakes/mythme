@@ -1,0 +1,9 @@
+update-video:
+  url: ${apiUrl}/videos/42460
+  method: PUT
+  headers:
+    Accept: application/json
+  body: |-
+    {
+
+    }

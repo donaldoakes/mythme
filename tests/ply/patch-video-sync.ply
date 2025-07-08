@@ -1,0 +1,88 @@
+patch-video-sync:
+  url: ${apiUrl}/videos
+  method: PATCH
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body: |-
+    {
+      "videos": [
+        {
+          "id": "996a637f7b4add7e",
+          "category": "precode",
+          "title": "A Notorious Affair",
+          "year": 1931,
+          "credits": [
+            {
+              "name": "Lloyd Bacon",
+              "role": "director"
+            },
+            {
+              "name": "Billie Dove",
+              "role": "actor"
+            },
+            {
+              "name": "Basil Rathbone",
+              "role": "actor"
+            },
+            {
+              "name": "Kay Francis",
+              "role": "actor"
+            },
+            {
+              "name": "Kenneth Thomson",
+              "role": "actor"
+            },
+            {
+              "name": "Montagu Love",
+              "role": "actor"
+            }
+          ],
+          "poster": "ana.jpg",
+          "rating": 3,
+          "webref": {
+            "site": "imdb.com",
+            "ref": "tt0021191"
+          },
+          "medium": "MPG"
+        },
+        {
+          "id": "1e907748b9636901",
+          "category": "precode",
+          "title": "A Woman of Affairs",
+          "year": 1928,
+          "credits": [
+            {
+              "name": "Clarence Brown",
+              "role": "director"
+            },
+            {
+              "name": "Greta Garbo",
+              "role": "actor"
+            },
+            {
+              "name": "John Gilbert",
+              "role": "actor"
+            },
+            {
+              "name": "Lewis Stone",
+              "role": "actor"
+            },
+            {
+              "name": "Johnny Mack Brown",
+              "role": "actor"
+            },
+            {
+              "name": "Douglas Fairbanks Jr.",
+              "role": "actor"
+            }
+          ],
+          "poster": "woa.jpg",
+          "webref": {
+            "site": "imdb.com",
+            "ref": "tt0019591"
+          },
+          "medium": "MPG"
+        }
+      ]
+    }
