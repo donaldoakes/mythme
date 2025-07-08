@@ -236,7 +236,7 @@ class VideoData:
                         sql = self.get_update_sql()
                         data = (
                             self.base_sql_data(filepath)
-                            | self.info_sql_data()
+                            | self.info_sql_data(vid)
                             | self.unused_sql_data()
                             | {"contenttype": "MOVIE"}
                         )
@@ -304,7 +304,7 @@ class VideoData:
                     director = ", ".join(directors)
             return {
                 "year": video.year or 0,
-                "releasedate": f"{video.year}-00-00" if video.year else "0000-00-00",
+                "releasedate": f"{video.year}-01-01" if video.year else "0000-00-00",
                 "userrating": (video.rating or 0) * 2,
                 "inetref": video.webref.ref if video.webref else "00000000",
                 "coverfile": coverfile,

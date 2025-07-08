@@ -1,4 +1,4 @@
-SELECT * FROM videometadata where intid in (53170, 52656)
+SELECT * FROM videometadata where intid in (102132)
 
 SELECT * FROM videometadata where title = 'Strip - Adam Ant'
 
