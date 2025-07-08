@@ -222,11 +222,12 @@ class VideoData:
                         )
                         missing.append(vid.title)
                         continue
-                    if not vid.medium or vid.medium == "DVD":
-                        logger.debug(
-                            f"Unsupported medium for '{vid.title}': {vid.medium}"
-                        )
+                    if not vid.medium:
+                        logger.error(f"Missing medium for '{vid.title}'")
                         missing.append(vid.title)
+                        continue
+                    elif vid.medium == "DVD":
+                        logger.debug(f"Skipping DVD title '{vid.title}'")
                         continue
                     ext = vid.medium.lower()
                     filepath = f"{catdir}/{vid.title}.{ext}"
@@ -241,7 +242,7 @@ class VideoData:
                             | {"contenttype": "MOVIE"}
                         )
                         cursor.execute(sql, data)
-                        updated.append(filepath)
+                        updated.append(vid.title)
                     else:
                         logger.info(f"Video missing from database: {filepath}")
                         missing.append(filepath)
