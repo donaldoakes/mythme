@@ -23,3 +23,7 @@ VALUES
 ('fedora', '1980s/Gen X/My Hot Video - Gen X.ts', 'My Hot Video - Gen X', 'abcdef123455', 'MUSICVIDEO',
 0, '0000-00-00', 0, '00000000', '', '',
 '', -1, '', 'NR', 0, 0, 0, 0, 0, -1, 1, 0, 0, 0)
+
+INSERT INTO videocast (cast) VALUES ('somebody')
+
+SELECT cast from videocast where intid in (select idcast from videometadatacast where idvideo = 111622)

@@ -134,11 +134,14 @@ class VideoData:
         else:
             return None
 
-    def get_db_filepaths(self) -> list[str]:
+    def get_db_filepaths(self) -> dict[str, int]:
         with get_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT filename FROM videometadata")
-                return [filename for (filename,) in cursor.fetchall()]
+                filepaths: dict[str, int] = {}
+                cursor.execute("SELECT filename, intid FROM videometadata")
+                for filename, intid in cursor.fetchall():
+                    filepaths[filename] = intid
+                return filepaths
 
     def get_fs_filepaths(self) -> Optional[list[str]]:
         sg_dirs = self.get_storage_group_dirs()
@@ -242,6 +245,32 @@ class VideoData:
                             | {"contenttype": "MOVIE"}
                         )
                         cursor.execute(sql, data)
+                        videoid = db_filepaths[filepath]
+                        if vid.credits:
+                            actors = [c.name for c in vid.credits if c.role == "actor"]
+                            for actor in actors:
+                                cursor.execute(
+                                    "SELECT intid FROM videocast where cast = %(cast)s",
+                                    {"cast": actor},
+                                )
+                                row = cursor.fetchone()
+                                castid = row["intid"] if row else None
+                                if not castid:
+                                    cursor.execute(
+                                        "INSERT INTO videocast (cast) VALUES (%(cast)s)",
+                                        {"cast": actor},
+                                    )
+                                    castid = cursor.lastrowid
+                                cursor.execute(
+                                    "SELECT 1 FROM videometadatacast WHERE idvideo = %(idvideo)s AND idcast = %(idcast)s",
+                                    {"idvideo": videoid, "idcast": castid},
+                                )
+                                if cursor.fetchone() is None:
+                                    cursor.execute(
+                                        "INSERT INTO videometadatacast (idvideo, idcast) VALUES (%(idvideo)s, %(idcast)s)",
+                                        {"idvideo": videoid, "idcast": castid},
+                                    )
+
                         updated.append(vid.title)
                     else:
                         logger.info(f"Video missing from database: {filepath}")
