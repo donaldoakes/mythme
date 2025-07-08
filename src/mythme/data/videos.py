@@ -223,7 +223,7 @@ class VideoData:
                         missing.append(vid.title)
                         continue
                     if not vid.medium:
-                        logger.error(f"Missing medium for '{vid.title}'")
+                        logger.warning(f"Missing medium for '{vid.title}'")
                         missing.append(vid.title)
                         continue
                     elif vid.medium == "DVD":
