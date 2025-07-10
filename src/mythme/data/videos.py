@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Optional, Tuple, Union
 from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
+from mythme.model.recording import Recording
 from mythme.model.video import Video, VideosResponse, WebRef
 from mythme.utils.db import get_connection
 from mythme.utils.mythtv import (
@@ -91,20 +92,36 @@ class VideoData:
             return self.to_video(res["VideoMetadataInfo"])
         return None
 
-    def get_video_by_file(self, file: str) -> Optional[Video]:
-        """Uses the MythTV API"""
-        try:
-            res = api_call(f"Video/GetVideoByFileName?FileName={file}")
-            if (
-                res
-                and "VideoMetadataInfo" in res
-                and "Id" in res["VideoMetadataInfo"]
-                and res["VideoMetadataInfo"]["Id"]
-            ):
-                return self.to_video(res["VideoMetadataInfo"])
-        except Exception as e:
-            logger.debug(f"Error retrieving video by file name: {e}")
+    def get_video_file(self, category: str, title: str) -> Optional[Video]:
+        """Checks the file system"""
+        video = Video(id=0, category=category, title=title, medium="MPG")
+        filepath = self.get_filepath(video)
+        if not filepath:
+            video.medium = "TS"
+            filepath = self.get_filepath(video)
+        if filepath:
+            for sg_dir in self.get_storage_group_dirs():
+                if os.path.isfile(f"{sg_dir}/{filepath}"):
+                    video.file = filepath
+                    return video
         return None
+
+    def get_filepath(self, vid: Video) -> Optional[str]:
+        catdir = self.get_category_dir(vid)
+        if not catdir:
+            logger.error(f"No category dir for '{vid.title}': {vid.category}")
+            return None
+        if not catdir:
+            logger.error(f"No category dir for '{vid.title}': {vid.category}")
+            return None
+        if not vid.medium:
+            logger.warning(f"Missing medium for '{vid.title}'")
+            return None
+        elif vid.medium == "DVD":
+            logger.debug(f"Skipping DVD title '{vid.title}'")
+            return None
+        ext = vid.medium.lower()
+        return f"{catdir}/{vid.title}.{ext}"
 
     def update_video(self, video: Video) -> bool:
         """Uses the MythTV API"""
@@ -218,22 +235,11 @@ class VideoData:
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 for vid in videos:
-                    catdir = self.get_category_dir(vid)
-                    if not catdir:
-                        logger.error(
-                            f"No category dir for '{vid.title}': {vid.category}"
-                        )
-                        missing.append(vid.title)
+                    filepath = self.get_filepath(vid)
+                    if not filepath:
+                        if vid.medium != "DVD":
+                            missing.append(vid.title)
                         continue
-                    if not vid.medium:
-                        logger.warning(f"Missing medium for '{vid.title}'")
-                        missing.append(vid.title)
-                        continue
-                    elif vid.medium == "DVD":
-                        logger.debug(f"Skipping DVD title '{vid.title}'")
-                        continue
-                    ext = vid.medium.lower()
-                    filepath = f"{catdir}/{vid.title}.{ext}"
                     row_exists = filepath in db_filepaths
                     if row_exists:
                         logger.info(f"Update existing video title: {vid.title}")
@@ -262,12 +268,12 @@ class VideoData:
                                     )
                                     castid = cursor.lastrowid
                                 cursor.execute(
-                                    "SELECT 1 FROM videometadatacast WHERE idvideo = %(idvideo)s AND idcast = %(idcast)s",
+                                    "SELECT 1 FROM videometadatacast WHERE idvideo = %(idvideo)s AND idcast = %(idcast)s",  # noqa: E501
                                     {"idvideo": videoid, "idcast": castid},
                                 )
                                 if cursor.fetchone() is None:
                                     cursor.execute(
-                                        "INSERT INTO videometadatacast (idvideo, idcast) VALUES (%(idvideo)s, %(idcast)s)",
+                                        "INSERT INTO videometadatacast (idvideo, idcast) VALUES (%(idvideo)s, %(idcast)s)",  # noqa: E501
                                         {"idvideo": videoid, "idcast": castid},
                                     )
 
@@ -367,6 +373,18 @@ class VideoData:
             "processed": 0,
             "category": 0,
         }
+
+    def add_video_from_recording(
+        self, rec: Recording, category: str
+    ) -> Optional[Video]:
+        recext = rec.file[rec.file.rindex(".") + 1 :]
+        video = Video(id="", category=category, title=rec.title, medium=recext.upper())
+        filepath = self.get_filepath(video)
+        if not filepath:
+            return None
+        video.file = filepath
+        video.year = rec.year
+        video.credits = rec.credits
 
     def to_video(self, vid: dict) -> Video:
         video = Video(id=vid["Id"], title=vid["Title"], file=vid["FileName"])

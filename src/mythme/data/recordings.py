@@ -6,7 +6,12 @@ from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import ScheduledRecording
-from mythme.utils.mythtv import api_call, api_update, paging_params
+from mythme.utils.mythtv import (
+    api_call,
+    api_update,
+    paging_params,
+    get_storage_group_dirs,
+)
 from mythme.utils.log import logger
 from mythme.utils.text import trim_article
 
@@ -162,3 +167,13 @@ class RecordingsData:
         RecordingsData.scheduled_recordings = [
             sr for sr in RecordingsData.scheduled_recordings if sr.id != id
         ]
+
+    def get_storage_group_dirs(self) -> list[str]:
+        sg_dirs = get_storage_group_dirs("Default")
+        if not sg_dirs or len(sg_dirs) == 0:
+            logger.error("No Default storage group found")
+            return []
+        return sg_dirs
+
+    def get_recording_file(self, recording: Recording) -> Optional[str]:
+        sg_dirs = get_storage_group_dirs("Default")

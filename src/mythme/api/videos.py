@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Request, HTTPException
 from mythme.data.videos import VideoData
+from mythme.model.recording import Recording
 from mythme.model.video import (
     DeleteMetadataResponse,
     Video,
@@ -16,7 +17,9 @@ router = APIRouter()
 
 @router.get("/videos", response_model_exclude_none=True)
 def get_videos(request: Request) -> VideosResponse:
-    query = parse_params(dict(request.query_params))
+    params = dict(request.query_params)
+    params["sort"] = params["sort"] if "sort" in params else "id"
+    query = parse_params(params)
     return VideoData().get_videos(query)
 
 
@@ -36,6 +39,15 @@ def delete_video_metadata() -> DeleteMetadataResponse:
     return DeleteMetadataResponse(deleted=rows)
 
 
+@router.patch("/videos", response_model_exclude_none=True)
+def sync_videos(sync_request: VideoSyncRequest) -> VideoSyncResponse:
+    result = VideoData().sync_video_metadata(sync_request.videos)
+    if result is None:
+        raise HTTPException(status_code=404, detail="No video storage group dirs found")
+    (updated, missing) = result
+    return VideoSyncResponse(updated=updated, missing=missing)
+
+
 @router.post("/video-scan", response_model_exclude_none=True)
 def scan_videos(request: VideoScanRequest) -> VideoScanResponse:
     result = VideoData().scan_videos()
@@ -46,10 +58,15 @@ def scan_videos(request: VideoScanRequest) -> VideoScanResponse:
     return VideoScanResponse(added=added, deleted=deleted)
 
 
-@router.patch("/videos", response_model_exclude_none=True)
-def sync_videos(sync_request: VideoSyncRequest) -> VideoSyncResponse:
-    result = VideoData().sync_video_metadata(sync_request.videos)
-    if result is None:
-        raise HTTPException(status_code=404, detail="No video storage group dirs found")
-    (updated, missing) = result
-    return VideoSyncResponse(updated=updated, missing=missing)
+@router.post("video-files")
+def post_video_file(recording: Recording, category: str) -> Video:
+    """Copy recording file to video storage group"""
+    video_data = VideoData()
+    if video_data.get_video_file(category, recording.title):
+        raise HTTPException(
+            status_code=409,
+            detail=f"{category} video file already exists: {recording.title}",
+        )
+
+    video = video_data.add_video_from_recording(recording, category)
+    return video
