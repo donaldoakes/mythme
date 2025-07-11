@@ -1,5 +1,5 @@
 post-video-file:
-  url: ${apiUrl}/video-files?source=recording&category=silent
+  url: ${apiUrl}/video-file?source=recording&category=silent
   method: POST
   headers:
     Accept: application/json

@@ -92,6 +92,29 @@ class VideoData:
             return self.to_video(res["VideoMetadataInfo"])
         return None
 
+    def get_db_video_id(self, filepath: str) -> Optional[int]:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT intid FROM videometadata WHERE filename = %(filename)s",
+                    {"filename": filepath},
+                )
+                row = cursor.fetchone()
+                if row:
+                    return row["intid"]
+        return None
+
+    def get_video_by_file(self, filename: str) -> Optional[Video]:
+        res = api_call(f"/Video/GetVideoByFileName?FileName={filename}")
+        if (
+            res
+            and "VideoMetadataInfo" in res
+            and "Id" in res["VideoMetadataInfo"]
+            and res["VideoMetadataInfo"]["Id"]
+        ):
+            return self.to_video(res["VideoMetadataInfo"])
+        return None
+
     def get_video_file(self, title: str, category: str, medium: str) -> Optional[str]:
         """Checks the file system, returns the full file path"""
         filepath = self.get_filepath(title, category, medium)
@@ -106,7 +129,6 @@ class VideoData:
     ) -> Optional[str]:
         catdir = self.get_category_dir(category)
         if not catdir:
-            logger.error(f"No category dir: {category} for '{title}'")
             return None
         if not medium:
             logger.warning(f"Missing medium for '{title}'")
@@ -116,6 +138,10 @@ class VideoData:
             return None
         ext = medium.lower()
         return f"{catdir}/{title}.{ext}"
+
+    def add_video(self, filepath: str, host: str) -> bool:
+        """Add video metadata. File should exist on fs."""
+        return api_update(f"Video/AddVideo?FileName={filepath}&HostName={host}")
 
     def update_video(self, video: Video) -> bool:
         """Uses the MythTV API"""
@@ -136,7 +162,19 @@ class VideoData:
         if category and category in config.mythtv.categories:
             return f"{config.mythtv.categories[category]}"
         else:
+            logger.error(f"No category config found: {category}")
             return None
+
+    def get_poster_path(
+        self, category: Optional[str] = None, poster: Optional[str] = None
+    ) -> Optional[str]:
+        catdir = self.get_category_dir(category)
+        if catdir:
+            cov_sg_dirs = get_storage_group_dirs("Coverart")
+            if cov_sg_dirs and len(cov_sg_dirs) > 0:
+                return f"{cov_sg_dirs[0]}/{catdir}/{poster}"
+            logger.error("Coverart storage group dirs not found")
+        return None
 
     def get_db_filepaths(self) -> dict[str, int]:
         with get_connection() as conn:
@@ -305,17 +343,7 @@ class VideoData:
         if video:
             coverfile = ""
             if video.poster:
-                catdir = self.get_category_dir(video.category)
-                if catdir:
-                    cov_sg_dirs = get_storage_group_dirs("Coverart")
-                    if cov_sg_dirs and len(cov_sg_dirs) > 0:
-                        coverfile = f"{cov_sg_dirs[0]}/{catdir}/{video.poster}"
-                    else:
-                        logger.error("Coverart storage group not found")
-                else:
-                    logger.error(
-                        f"No category dir for '{video.title}': {video.category}"
-                    )
+                coverfile = self.get_poster_path(video.category, video.poster) or ""
             director = ""
             if video.credits:
                 directors = [
@@ -419,23 +447,10 @@ class VideoData:
             ]
             if len(directors):
                 vid["Director"] = ", ".join(directors)
-        if (
-            video.poster
-            and video.category
-            and video.category in config.mythtv.categories
-        ):
-            ca_sgs = get_storage_group_dirs("Coverart")
-            if ca_sgs and len(ca_sgs):
-                ca_sg = ca_sgs[0]
-                cat_path = (
-                    config.mythtv.categories[video.category]
-                    if video.category in config.mythtv.categories
-                    else None
-                )
-                if cat_path:
-                    vid["Coverart"] = vid["CoverFile"] = (
-                        f"{ca_sg}/{cat_path}/{video.poster}"
-                    )
+        if video.poster:
+            poster_path = self.get_poster_path(video.category, video.poster)
+            if poster_path:
+                vid["Coverart"] = vid["CoverFile"] = poster_path
         if video.webref:
             vid["Inetref"] = video.webref.ref
 

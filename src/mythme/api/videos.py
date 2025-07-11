@@ -1,6 +1,6 @@
 import os
 import shutil
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, UploadFile
 from mythme.data.recordings import RecordingsData
 from mythme.data.videos import VideoData
 from mythme.model.api import MessageResponse
@@ -15,7 +15,8 @@ from mythme.model.video import (
     VideosResponse,
 )
 from mythme.query.queries import parse_params
-from mythme.utils.mythtv import get_storage_group_dirs
+from mythme.utils.mythtv import get_myth_hostname, get_storage_group_dirs
+from mythme.utils.log import logger
 
 router = APIRouter()
 
@@ -26,6 +27,39 @@ def get_videos(request: Request) -> VideosResponse:
     params["sort"] = params["sort"] if "sort" in params else "id"
     query = parse_params(params)
     return VideoData().get_videos(query)
+
+
+@router.post("/videos", response_model_exclude_none=True)
+def create_video_metadata(video: Video) -> Video:
+    video_data = VideoData()
+    filepath = video_data.get_filepath(video.title, video.category, video.medium)
+    if filepath is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Storage not found for video category: {video.category}",
+        )
+    exist_id = video_data.get_db_video_id(filepath)
+    if exist_id is not None:
+        raise HTTPException(
+            status_code=409, detail=f"Video file already exists: {filepath}"
+        )
+    host = get_myth_hostname()
+    if host is None:
+        raise HTTPException(status_code=500, detail="Can't figure out MythTV hostname")
+    added = video_data.add_video(filepath, host)
+    if not added:
+        raise HTTPException(status_code=500, detail=f"Error adding video: {filepath}")
+    newvid = video_data.get_video_by_file(filepath)
+    if not newvid:
+        raise HTTPException(status_code=500, detail=f"Error locating video: {filepath}")
+
+    video.id = newvid.id
+    video.file = filepath
+    updated = video_data.update_video(video)
+    if not updated:
+        raise HTTPException(status_code=500, detail=f"Error updating video: {filepath}")
+
+    return video
 
 
 @router.get("/videos/{id}", response_model_exclude_none=True)
@@ -63,7 +97,7 @@ def scan_videos(request: VideoScanRequest) -> VideoScanResponse:
     return VideoScanResponse(added=added, deleted=deleted)
 
 
-@router.post("/video-files", response_model_exclude_none=True)
+@router.post("/video-file", response_model_exclude_none=True)
 def post_video_file(
     source: str, category: str, recording: Recording
 ) -> MessageResponse:
@@ -79,10 +113,11 @@ def post_video_file(
     _file, ext = os.path.splitext(recording.file)
     medium = ext[1:].upper()
 
-    if video_data.get_video_file(recording.title, category, medium):
+    exist_file = video_data.get_video_file(recording.title, category, medium)
+    if exist_file:
         raise HTTPException(
             status_code=409,
-            detail=f"{category} video file already exists: {recording.title}",
+            detail=f"Video file already exists: {exist_file}",
         )
 
     recording_file = RecordingsData().get_recording_file(recording)
@@ -119,3 +154,33 @@ def post_video_file(
         status_code=404,
         detail=f"Storage group subdirectory not found for category: {category}",
     )
+
+
+@router.post("/video-poster")
+async def upload_poster(file: UploadFile, category: str) -> MessageResponse:
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Missing filename")
+    if file.filename.split(".")[-1] not in ["jpg", "jpeg", "png"]:
+        raise HTTPException(status_code=415, detail="Unsupported video format")
+    contents = await file.read()
+    poster_path = VideoData().get_poster_path(category, file.filename)
+    if poster_path is None:
+        raise HTTPException(
+            status_code=404, detail=f"Poster path not found for category: {category}"
+        )
+    if not os.path.isdir(os.path.dirname(poster_path)):
+        logger.error(f"Poster storage dir not found to create file: {poster_path}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Poster storage dir does not exist for category: {category}",
+        )
+    if os.path.isfile(poster_path):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Poster file already exists for category {category}: {file.filename}",
+        )
+
+    with open(poster_path, "wb") as f:
+        f.write(contents)
+
+    return MessageResponse(message=f"Poster file saved for category: {category}")

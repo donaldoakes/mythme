@@ -1,6 +1,6 @@
-update-video:
-  url: ${apiUrl}/videos/42460
-  method: PUT
+post-video:
+  url: ${apiUrl}/videos
+  method: POST
   headers:
     Accept: application/json
   body: |-
