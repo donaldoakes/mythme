@@ -7,6 +7,7 @@ from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.video import Video, VideosResponse, WebRef
 from mythme.utils.db import get_connection
+from mythme.utils.media import media_file_path
 from mythme.utils.mythtv import (
     api_call,
     api_update,
@@ -91,18 +92,13 @@ class VideoData:
             return self.to_video(res["VideoMetadataInfo"])
         return None
 
-    def get_video_file(self, category: str, title: str) -> Optional[Video]:
-        """Checks the file system"""
-        video = Video(id=0, category=category, title=title, medium="MPG")
-        filepath = self.get_filepath(video.title, video.category, video.medium)
-        if not filepath:
-            video.medium = "TS"
-            filepath = self.get_filepath(video.title, video.category, video.medium)
+    def get_video_file(self, title: str, category: str, medium: str) -> Optional[str]:
+        """Checks the file system, returns the full file path"""
+        filepath = self.get_filepath(title, category, medium)
         if filepath:
-            for sg_dir in get_storage_group_dirs("Videos") or []:
-                if os.path.isfile(f"{sg_dir}/{filepath}"):
-                    video.file = filepath
-                    return video
+            path = media_file_path("Videos", filepath)
+            if path:
+                return str(path)
         return None
 
     def get_filepath(

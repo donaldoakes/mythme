@@ -64,11 +64,22 @@ def scan_videos(request: VideoScanRequest) -> VideoScanResponse:
 
 
 @router.post("/video-files", response_model_exclude_none=True)
-def post_video_file(recording: Recording, category: str) -> MessageResponse:
+def post_video_file(
+    source: str, category: str, recording: Recording
+) -> MessageResponse:
+    if not source == "recording":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported video file source: {source}",
+        )
+
     """Copy recording file to Videos storage group"""
     video_data = VideoData()
 
-    if video_data.get_video_file(category, recording.title):
+    _file, ext = os.path.splitext(recording.file)
+    medium = ext[1:].upper()
+
+    if video_data.get_video_file(recording.title, category, medium):
         raise HTTPException(
             status_code=409,
             detail=f"{category} video file already exists: {recording.title}",
@@ -80,9 +91,6 @@ def post_video_file(recording: Recording, category: str) -> MessageResponse:
             status_code=404,
             detail=f"Recording file not found in '{recording.group}' storage group: {recording.file}",
         )
-
-    _file, ext = os.path.splitext(recording.file)
-    medium = ext[1:].upper()
 
     sg_dirs = get_storage_group_dirs("Videos")
     if sg_dirs is None or len(sg_dirs) == 0:
@@ -100,6 +108,7 @@ def post_video_file(recording: Recording, category: str) -> MessageResponse:
 
     for sg_dir in sg_dirs:
         video_path = f"{sg_dir}/{video_file}"
+        # copies to first existing sg subdir
         if os.path.isdir(os.path.dirname(video_path)):
             shutil.copy(recording_file, video_path)
             return MessageResponse(
