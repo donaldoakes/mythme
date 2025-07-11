@@ -1,0 +1,5 @@
+add-video:
+  url: ${mythtv.apiUrl}/Video/AddVideo?FileName=Silent/The Red Lily.ts&HostName=fedora
+  method: POST
+  headers:
+    Accept: application/json
