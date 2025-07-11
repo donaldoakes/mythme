@@ -1,0 +1,5 @@
+get-recorded:
+  url: ${mythtv.apiUrl}/Dvr/GetRecorded?RecordedId=157
+  method: GET
+  headers:
+    Accept: application/json

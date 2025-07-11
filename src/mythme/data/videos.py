@@ -5,7 +5,6 @@ from datetime import datetime
 from typing import Optional, Tuple, Union
 from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
-from mythme.model.recording import Recording
 from mythme.model.video import Video, VideosResponse, WebRef
 from mythme.utils.db import get_connection
 from mythme.utils.mythtv import (
@@ -95,33 +94,32 @@ class VideoData:
     def get_video_file(self, category: str, title: str) -> Optional[Video]:
         """Checks the file system"""
         video = Video(id=0, category=category, title=title, medium="MPG")
-        filepath = self.get_filepath(video)
+        filepath = self.get_filepath(video.title, video.category, video.medium)
         if not filepath:
             video.medium = "TS"
-            filepath = self.get_filepath(video)
+            filepath = self.get_filepath(video.title, video.category, video.medium)
         if filepath:
-            for sg_dir in self.get_storage_group_dirs():
+            for sg_dir in get_storage_group_dirs("Videos") or []:
                 if os.path.isfile(f"{sg_dir}/{filepath}"):
                     video.file = filepath
                     return video
         return None
 
-    def get_filepath(self, vid: Video) -> Optional[str]:
-        catdir = self.get_category_dir(vid)
+    def get_filepath(
+        self, title: str, category: Optional[str] = None, medium: Optional[str] = None
+    ) -> Optional[str]:
+        catdir = self.get_category_dir(category)
         if not catdir:
-            logger.error(f"No category dir for '{vid.title}': {vid.category}")
+            logger.error(f"No category dir: {category} for '{title}'")
             return None
-        if not catdir:
-            logger.error(f"No category dir for '{vid.title}': {vid.category}")
+        if not medium:
+            logger.warning(f"Missing medium for '{title}'")
             return None
-        if not vid.medium:
-            logger.warning(f"Missing medium for '{vid.title}'")
+        elif medium == "DVD":
+            logger.debug(f"Skipping DVD title '{title}'")
             return None
-        elif vid.medium == "DVD":
-            logger.debug(f"Skipping DVD title '{vid.title}'")
-            return None
-        ext = vid.medium.lower()
-        return f"{catdir}/{vid.title}.{ext}"
+        ext = medium.lower()
+        return f"{catdir}/{title}.{ext}"
 
     def update_video(self, video: Video) -> bool:
         """Uses the MythTV API"""
@@ -138,16 +136,9 @@ class VideoData:
                 cursor.execute("DELETE FROM videocast")
         return rows
 
-    def get_storage_group_dirs(self) -> list[str]:
-        sg_dirs = get_storage_group_dirs("Videos")
-        if not sg_dirs or len(sg_dirs) == 0:
-            logger.error("No Videos storage group found")
-            return []
-        return sg_dirs
-
-    def get_category_dir(self, video: Video) -> Optional[str]:
-        if video.category and video.category in config.mythtv.categories:
-            return f"{config.mythtv.categories[video.category]}"
+    def get_category_dir(self, category: Optional[str] = None) -> Optional[str]:
+        if category and category in config.mythtv.categories:
+            return f"{config.mythtv.categories[category]}"
         else:
             return None
 
@@ -161,9 +152,8 @@ class VideoData:
                 return filepaths
 
     def get_fs_filepaths(self) -> Optional[list[str]]:
-        sg_dirs = self.get_storage_group_dirs()
-        if not len(sg_dirs):
-            logger.error("No video storage group directories found")
+        sg_dirs = get_storage_group_dirs("Videos")
+        if sg_dirs is None:
             return None
         logger.info(f"Scanning video storage group directories: {sg_dirs}")
         filepaths: list[str] = []
@@ -226,8 +216,8 @@ class VideoData:
         self, videos: list[Video]
     ) -> Optional[Tuple[list[str], list[str]]]:
         """Updates matching videos in the database"""
-        sg_dirs = self.get_storage_group_dirs()
-        if not len(sg_dirs):
+        sg_dirs = get_storage_group_dirs("Videos")
+        if sg_dirs is None:
             return None
         updated: list[str] = []
         missing: list[str] = []
@@ -235,7 +225,7 @@ class VideoData:
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 for vid in videos:
-                    filepath = self.get_filepath(vid)
+                    filepath = self.get_filepath(vid.title, vid.category, vid.medium)
                     if not filepath:
                         if vid.medium != "DVD":
                             missing.append(vid.title)
@@ -319,7 +309,7 @@ class VideoData:
         if video:
             coverfile = ""
             if video.poster:
-                catdir = self.get_category_dir(video)
+                catdir = self.get_category_dir(video.category)
                 if catdir:
                     cov_sg_dirs = get_storage_group_dirs("Coverart")
                     if cov_sg_dirs and len(cov_sg_dirs) > 0:
@@ -374,17 +364,17 @@ class VideoData:
             "category": 0,
         }
 
-    def add_video_from_recording(
-        self, rec: Recording, category: str
-    ) -> Optional[Video]:
-        recext = rec.file[rec.file.rindex(".") + 1 :]
-        video = Video(id="", category=category, title=rec.title, medium=recext.upper())
-        filepath = self.get_filepath(video)
-        if not filepath:
-            return None
-        video.file = filepath
-        video.year = rec.year
-        video.credits = rec.credits
+    # def add_video_from_recording(
+    #     self, rec: Recording, category: str
+    # ) -> Optional[Video]:
+    #     recext = rec.file[rec.file.rindex(".") + 1 :]
+    #     video = Video(id="", category=category, title=rec.title, medium=recext.upper())
+    #     filepath = self.get_filepath(video.title, video.category, video.medium)
+    #     if not filepath:
+    #         return None
+    #     video.file = filepath
+    #     video.year = rec.year
+    #     video.credits = rec.credits
 
     def to_video(self, vid: dict) -> Video:
         video = Video(id=vid["Id"], title=vid["Title"], file=vid["FileName"])

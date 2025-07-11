@@ -1,5 +1,9 @@
+import os
+import shutil
 from fastapi import APIRouter, Request, HTTPException
+from mythme.data.recordings import RecordingsData
 from mythme.data.videos import VideoData
+from mythme.model.api import MessageResponse
 from mythme.model.recording import Recording
 from mythme.model.video import (
     DeleteMetadataResponse,
@@ -11,6 +15,7 @@ from mythme.model.video import (
     VideosResponse,
 )
 from mythme.query.queries import parse_params
+from mythme.utils.mythtv import get_storage_group_dirs
 
 router = APIRouter()
 
@@ -58,15 +63,50 @@ def scan_videos(request: VideoScanRequest) -> VideoScanResponse:
     return VideoScanResponse(added=added, deleted=deleted)
 
 
-@router.post("video-files")
-def post_video_file(recording: Recording, category: str) -> Video:
-    """Copy recording file to video storage group"""
+@router.post("/video-files", response_model_exclude_none=True)
+def post_video_file(recording: Recording, category: str) -> MessageResponse:
+    """Copy recording file to Videos storage group"""
     video_data = VideoData()
+
     if video_data.get_video_file(category, recording.title):
         raise HTTPException(
             status_code=409,
             detail=f"{category} video file already exists: {recording.title}",
         )
 
-    video = video_data.add_video_from_recording(recording, category)
-    return video
+    recording_file = RecordingsData().get_recording_file(recording)
+    if recording_file is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Recording file not found in '{recording.group}' storage group: {recording.file}",
+        )
+
+    _file, ext = os.path.splitext(recording.file)
+    medium = ext[1:].upper()
+
+    sg_dirs = get_storage_group_dirs("Videos")
+    if sg_dirs is None or len(sg_dirs) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Videos storage group directories not found",
+        )
+
+    video_file = video_data.get_filepath(recording.title, category, medium)
+    if video_file is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Category directory not found for: {category}",
+        )
+
+    for sg_dir in sg_dirs:
+        video_path = f"{sg_dir}/{video_file}"
+        if os.path.isdir(os.path.dirname(video_path)):
+            shutil.copy(recording_file, video_path)
+            return MessageResponse(
+                message=f"Recording '{recording.title}' copied to Videos storage group under {category} category"
+            )
+
+    raise HTTPException(
+        status_code=404,
+        detail=f"Storage group subdirectory not found for category: {category}",
+    )

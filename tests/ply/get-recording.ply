@@ -1,0 +1,5 @@
+get-recording:
+  url: ${apiUrl}/recorded/157
+  method: GET
+  headers:
+    Accept: application/json

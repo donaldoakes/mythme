@@ -1,7 +1,7 @@
 from datetime import datetime
 from fastapi import APIRouter, Request, HTTPException
 from mythme.data.recordings import RecordingsData
-from mythme.model.recording import RecordingsResponse
+from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import RecordingRequest, ScheduledRecording, recording_types
 from mythme.query.queries import parse_params
 from mythme.utils.mythtv import api_call
@@ -14,6 +14,14 @@ router = APIRouter()
 def get_recordings(request: Request) -> RecordingsResponse:
     query = parse_params(dict(request.query_params))
     return RecordingsData().get_recordings(query)
+
+
+@router.get("/recorded/{recid}", response_model_exclude_none=True)
+def get_recording(recid: int) -> Recording:
+    recording = RecordingsData().get_recording(recid)
+    if recording is None:
+        raise HTTPException(status_code=404, detail=f"Recording not found: {recid}")
+    return recording
 
 
 @router.delete("/recorded/{recid}", response_model_exclude_none=True)

@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import datetime
 from typing import Optional
@@ -44,6 +45,15 @@ class RecordingsData:
             )
 
         return RecordingsResponse(recordings=recordings, total=total)
+
+    def get_recording(self, recid: int) -> Optional[Recording]:
+        result = api_call(f"Dvr/GetRecorded?RecordedId={recid}")
+        prog = result["Program"] if result and "Program" in result else None
+        if prog:
+            rec = prog["Recording"] if "Recording" in prog else None
+            if rec and ("RecGroup" not in rec or rec["RecGroup"] != "Deleted"):
+                return self.to_recording(prog)
+        return None
 
     def delete_recording(self, recid: int) -> bool:
         return api_update(path=f"Dvr/DeleteRecording?RecordedId={recid}")
@@ -168,12 +178,11 @@ class RecordingsData:
             sr for sr in RecordingsData.scheduled_recordings if sr.id != id
         ]
 
-    def get_storage_group_dirs(self) -> list[str]:
-        sg_dirs = get_storage_group_dirs("Default")
-        if not sg_dirs or len(sg_dirs) == 0:
-            logger.error("No Default storage group found")
-            return []
-        return sg_dirs
-
     def get_recording_file(self, recording: Recording) -> Optional[str]:
-        sg_dirs = get_storage_group_dirs("Default")
+        sg_dirs = get_storage_group_dirs(recording.group)
+        if sg_dirs is not None:
+            for sg_dir in sg_dirs:
+                filepath = f"{sg_dir}/{recording.file}"
+                if os.path.isfile(filepath):
+                    return filepath
+        return None
