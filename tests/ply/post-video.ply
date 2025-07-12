@@ -1,0 +1,41 @@
+post-video:
+  url: ${apiUrl}/videos
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body: |-
+    {
+      "category": "silent",
+      "title": "The Red Lily",
+      "year": 1924,
+      "credits": [
+        {
+          "name": "Fred Niblo",
+          "role": "director"
+        },
+        {
+          "name": "Ramon Novarro",
+          "role": "actor"
+        },
+        {
+          "name": "Enid Bennett",
+          "role": "actor"
+        },
+        {
+          "name": "Frank Currier",
+          "role": "actor"
+        },
+        {
+          "name": "Mitchell Lewis",
+          "role": "actor"
+        },
+        {
+          "name": "Rosita Marstini",
+          "role": "actor"
+        }
+      ],
+      "poster": "The Red Lily.jpg",
+      "id": "0",
+      "medium": "TS"
+    }

@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import datetime
 from typing import Optional
@@ -6,7 +7,12 @@ from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import ScheduledRecording
-from mythme.utils.mythtv import api_call, api_update, paging_params
+from mythme.utils.mythtv import (
+    api_call,
+    api_update,
+    paging_params,
+    get_storage_group_dirs,
+)
 from mythme.utils.log import logger
 from mythme.utils.text import trim_article
 
@@ -39,6 +45,15 @@ class RecordingsData:
             )
 
         return RecordingsResponse(recordings=recordings, total=total)
+
+    def get_recording(self, recid: int) -> Optional[Recording]:
+        result = api_call(f"Dvr/GetRecorded?RecordedId={recid}")
+        prog = result["Program"] if result and "Program" in result else None
+        if prog:
+            rec = prog["Recording"] if "Recording" in prog else None
+            if rec and ("RecGroup" not in rec or rec["RecGroup"] != "Deleted"):
+                return self.to_recording(prog)
+        return None
 
     def delete_recording(self, recid: int) -> bool:
         return api_update(path=f"Dvr/DeleteRecording?RecordedId={recid}")
@@ -162,3 +177,12 @@ class RecordingsData:
         RecordingsData.scheduled_recordings = [
             sr for sr in RecordingsData.scheduled_recordings if sr.id != id
         ]
+
+    def get_recording_file(self, recording: Recording) -> Optional[str]:
+        sg_dirs = get_storage_group_dirs(recording.group)
+        if sg_dirs is not None:
+            for sg_dir in sg_dirs:
+                filepath = f"{sg_dir}/{recording.file}"
+                if os.path.isfile(filepath):
+                    return filepath
+        return None

@@ -1,0 +1,94 @@
+post-video-file:
+  url: ${apiUrl}/video-file?source=recording&category=silent
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body: |-
+    {
+      "channel": {
+        "id": 20767,
+        "number": 767,
+        "callsign": "TCMHD",
+        "name": "Turner Classic Movies HD",
+        "icon": {
+          "file": "s64312_light_360w_270h.png",
+          "shade": "light"
+        }
+      },
+      "title": "Scaramouche",
+      "start": "2021-08-13T02:45:00Z",
+      "end": "2021-08-13T05:00:00Z",
+      "description": "An 18th-century Frenchman (Ramon Novarro) poses as a clown and meets a master swordsman in a duel of revenge.",
+      "type": "movie",
+      "category": "Adventure",
+      "year": 1923,
+      "rating": 3.125,
+      "credits": [
+        {
+          "name": "Julia Swayne Gordon",
+          "role": "actor"
+        },
+        {
+          "name": "Bowditch Turner",
+          "role": "actor"
+        },
+        {
+          "name": "George Siegmann",
+          "role": "actor"
+        },
+        {
+          "name": "Otto Matieson",
+          "role": "actor"
+        },
+        {
+          "name": "John George",
+          "role": "actor"
+        },
+        {
+          "name": "Alice Terry",
+          "role": "actor"
+        },
+        {
+          "name": "Lewis Stone",
+          "role": "actor"
+        },
+        {
+          "name": "William Humphrey",
+          "role": "actor"
+        },
+        {
+          "name": "Lloyd Ingraham",
+          "role": "actor"
+        },
+        {
+          "name": "Ramon Novarro",
+          "role": "actor"
+        },
+        {
+          "name": "Willard Lee Hall",
+          "role": "actor"
+        },
+        {
+          "name": "James A. Marcus",
+          "role": "actor"
+        },
+        {
+          "name": "Rex Ingram",
+          "role": "director"
+        },
+        {
+          "name": "Rex Ingram",
+          "role": "producer"
+        },
+        {
+          "name": "Willis Goldbeck",
+          "role": "writer"
+        }
+      ],
+      "recid": 157,
+      "status": "Recorded",
+      "file": "20767_20210813024500.ts",
+      "size": 4023306220,
+      "group": "Default"
+    }

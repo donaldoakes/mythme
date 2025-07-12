@@ -1,0 +1,5 @@
+get-video-file:
+  url: ${apiUrl}/video-file?category=precode&title=A Woman of Affairs
+  method: GET
+  headers:
+    Accept: application/json

@@ -93,24 +93,31 @@ def get_myth_hostname() -> Optional[str]:
 
 
 def get_storage_group_dirs(group: str) -> Optional[list[str]]:
+    sg_dirs: Optional[list[str]] = None
     if group in config.mythtv.storage_groups:
-        return config.mythtv.storage_groups[group]
-    hostname = get_myth_hostname()
-    if hostname:
-        res = api_call(f"/Myth/GetStorageGroupDirs?GroupName={group}")
-        if (
-            res
-            and "StorageGroupDirList" in res
-            and "StorageGroupDirs" in res["StorageGroupDirList"]
-        ):
-            sg_dirs = res["StorageGroupDirList"]["StorageGroupDirs"]
-            dirs = [
-                dir["DirName"]
-                for dir in filter(lambda sgd: sgd["HostName"] == hostname, sg_dirs)
-            ]
-            config.mythtv.storage_groups[group] = dirs
-            return dirs
-    return None
+        sg_dirs = config.mythtv.storage_groups[group]
+    else:
+        hostname = get_myth_hostname()
+        if hostname:
+            res = api_call(f"/Myth/GetStorageGroupDirs?GroupName={group}")
+            if (
+                res
+                and "StorageGroupDirList" in res
+                and "StorageGroupDirs" in res["StorageGroupDirList"]
+            ):
+                sgs: list[dict[str, str]] = res["StorageGroupDirList"][
+                    "StorageGroupDirs"
+                ]
+                dirs = [
+                    dir_item["DirName"]
+                    for dir_item in filter(lambda sg: sg["HostName"] == hostname, sgs)
+                    for dir_item in [dir_item]
+                ]
+                config.mythtv.storage_groups[group] = dirs
+                sg_dirs = dirs
+    if sg_dirs is None or len(sg_dirs) == 0:
+        logger.error(f"No storage group directories found: {group}")
+    return sg_dirs
 
 
 def paging_params(query: Query) -> str:

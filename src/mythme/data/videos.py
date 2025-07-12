@@ -7,6 +7,7 @@ from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.video import Video, VideosResponse, WebRef
 from mythme.utils.db import get_connection
+from mythme.utils.media import media_file_path
 from mythme.utils.mythtv import (
     api_call,
     api_update,
@@ -91,20 +92,56 @@ class VideoData:
             return self.to_video(res["VideoMetadataInfo"])
         return None
 
-    def get_video_by_file(self, file: str) -> Optional[Video]:
-        """Uses the MythTV API"""
-        try:
-            res = api_call(f"Video/GetVideoByFileName?FileName={file}")
-            if (
-                res
-                and "VideoMetadataInfo" in res
-                and "Id" in res["VideoMetadataInfo"]
-                and res["VideoMetadataInfo"]["Id"]
-            ):
-                return self.to_video(res["VideoMetadataInfo"])
-        except Exception as e:
-            logger.debug(f"Error retrieving video by file name: {e}")
+    def get_db_video_id(self, filepath: str) -> Optional[int]:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT intid FROM videometadata WHERE filename = %(filename)s",
+                    {"filename": filepath},
+                )
+                row = cursor.fetchone()
+                if row:
+                    return row["intid"]
         return None
+
+    def get_video_by_file(self, filename: str) -> Optional[Video]:
+        res = api_call(f"/Video/GetVideoByFileName?FileName={filename}")
+        if (
+            res
+            and "VideoMetadataInfo" in res
+            and "Id" in res["VideoMetadataInfo"]
+            and res["VideoMetadataInfo"]["Id"]
+        ):
+            return self.to_video(res["VideoMetadataInfo"])
+        return None
+
+    def get_video_file(self, title: str, category: str, medium: str) -> Optional[str]:
+        """Checks the file system, returns the full file path"""
+        filepath = self.get_filepath(title, category, medium)
+        if filepath:
+            path = media_file_path("Videos", filepath)
+            if path:
+                return str(path)
+        return None
+
+    def get_filepath(
+        self, title: str, category: Optional[str] = None, medium: Optional[str] = None
+    ) -> Optional[str]:
+        catdir = self.get_category_dir(category)
+        if not catdir:
+            return None
+        if not medium:
+            logger.warning(f"Missing medium for '{title}'")
+            return None
+        elif medium == "DVD":
+            logger.debug(f"Skipping DVD title '{title}'")
+            return None
+        ext = medium.lower()
+        return f"{catdir}/{title}.{ext}"
+
+    def add_video(self, filepath: str, host: str) -> bool:
+        """Add video metadata. File should exist on fs."""
+        return api_update(f"Video/AddVideo?FileName={filepath}&HostName={host}")
 
     def update_video(self, video: Video) -> bool:
         """Uses the MythTV API"""
@@ -121,18 +158,23 @@ class VideoData:
                 cursor.execute("DELETE FROM videocast")
         return rows
 
-    def get_storage_group_dirs(self) -> list[str]:
-        sg_dirs = get_storage_group_dirs("Videos")
-        if not sg_dirs or len(sg_dirs) == 0:
-            logger.error("No Videos storage group found")
-            return []
-        return sg_dirs
-
-    def get_category_dir(self, video: Video) -> Optional[str]:
-        if video.category and video.category in config.mythtv.categories:
-            return f"{config.mythtv.categories[video.category]}"
+    def get_category_dir(self, category: Optional[str] = None) -> Optional[str]:
+        if category and category in config.mythtv.categories:
+            return f"{config.mythtv.categories[category]}"
         else:
+            logger.error(f"No category config found: {category}")
             return None
+
+    def get_poster_path(
+        self, category: Optional[str] = None, poster: Optional[str] = None
+    ) -> Optional[str]:
+        catdir = self.get_category_dir(category)
+        if catdir:
+            cov_sg_dirs = get_storage_group_dirs("Coverart")
+            if cov_sg_dirs and len(cov_sg_dirs) > 0:
+                return f"{cov_sg_dirs[0]}/{catdir}/{poster}"
+            logger.error("Coverart storage group dirs not found")
+        return None
 
     def get_db_filepaths(self) -> dict[str, int]:
         with get_connection() as conn:
@@ -144,9 +186,8 @@ class VideoData:
                 return filepaths
 
     def get_fs_filepaths(self) -> Optional[list[str]]:
-        sg_dirs = self.get_storage_group_dirs()
-        if not len(sg_dirs):
-            logger.error("No video storage group directories found")
+        sg_dirs = get_storage_group_dirs("Videos")
+        if sg_dirs is None:
             return None
         logger.info(f"Scanning video storage group directories: {sg_dirs}")
         filepaths: list[str] = []
@@ -209,8 +250,8 @@ class VideoData:
         self, videos: list[Video]
     ) -> Optional[Tuple[list[str], list[str]]]:
         """Updates matching videos in the database"""
-        sg_dirs = self.get_storage_group_dirs()
-        if not len(sg_dirs):
+        sg_dirs = get_storage_group_dirs("Videos")
+        if sg_dirs is None:
             return None
         updated: list[str] = []
         missing: list[str] = []
@@ -218,22 +259,11 @@ class VideoData:
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 for vid in videos:
-                    catdir = self.get_category_dir(vid)
-                    if not catdir:
-                        logger.error(
-                            f"No category dir for '{vid.title}': {vid.category}"
-                        )
-                        missing.append(vid.title)
+                    filepath = self.get_filepath(vid.title, vid.category, vid.medium)
+                    if not filepath:
+                        if vid.medium != "DVD":
+                            missing.append(vid.title)
                         continue
-                    if not vid.medium:
-                        logger.warning(f"Missing medium for '{vid.title}'")
-                        missing.append(vid.title)
-                        continue
-                    elif vid.medium == "DVD":
-                        logger.debug(f"Skipping DVD title '{vid.title}'")
-                        continue
-                    ext = vid.medium.lower()
-                    filepath = f"{catdir}/{vid.title}.{ext}"
                     row_exists = filepath in db_filepaths
                     if row_exists:
                         logger.info(f"Update existing video title: {vid.title}")
@@ -262,12 +292,12 @@ class VideoData:
                                     )
                                     castid = cursor.lastrowid
                                 cursor.execute(
-                                    "SELECT 1 FROM videometadatacast WHERE idvideo = %(idvideo)s AND idcast = %(idcast)s",
+                                    "SELECT 1 FROM videometadatacast WHERE idvideo = %(idvideo)s AND idcast = %(idcast)s",  # noqa: E501
                                     {"idvideo": videoid, "idcast": castid},
                                 )
                                 if cursor.fetchone() is None:
                                     cursor.execute(
-                                        "INSERT INTO videometadatacast (idvideo, idcast) VALUES (%(idvideo)s, %(idcast)s)",
+                                        "INSERT INTO videometadatacast (idvideo, idcast) VALUES (%(idvideo)s, %(idcast)s)",  # noqa: E501
                                         {"idvideo": videoid, "idcast": castid},
                                     )
 
@@ -313,17 +343,7 @@ class VideoData:
         if video:
             coverfile = ""
             if video.poster:
-                catdir = self.get_category_dir(video)
-                if catdir:
-                    cov_sg_dirs = get_storage_group_dirs("Coverart")
-                    if cov_sg_dirs and len(cov_sg_dirs) > 0:
-                        coverfile = f"{cov_sg_dirs[0]}/{catdir}/{video.poster}"
-                    else:
-                        logger.error("Coverart storage group not found")
-                else:
-                    logger.error(
-                        f"No category dir for '{video.title}': {video.category}"
-                    )
+                coverfile = self.get_poster_path(video.category, video.poster) or ""
             director = ""
             if video.credits:
                 directors = [
@@ -367,6 +387,18 @@ class VideoData:
             "processed": 0,
             "category": 0,
         }
+
+    # def add_video_from_recording(
+    #     self, rec: Recording, category: str
+    # ) -> Optional[Video]:
+    #     recext = rec.file[rec.file.rindex(".") + 1 :]
+    #     video = Video(id="", category=category, title=rec.title, medium=recext.upper())
+    #     filepath = self.get_filepath(video.title, video.category, video.medium)
+    #     if not filepath:
+    #         return None
+    #     video.file = filepath
+    #     video.year = rec.year
+    #     video.credits = rec.credits
 
     def to_video(self, vid: dict) -> Video:
         video = Video(id=vid["Id"], title=vid["Title"], file=vid["FileName"])
@@ -415,23 +447,10 @@ class VideoData:
             ]
             if len(directors):
                 vid["Director"] = ", ".join(directors)
-        if (
-            video.poster
-            and video.category
-            and video.category in config.mythtv.categories
-        ):
-            ca_sgs = get_storage_group_dirs("Coverart")
-            if ca_sgs and len(ca_sgs):
-                ca_sg = ca_sgs[0]
-                cat_path = (
-                    config.mythtv.categories[video.category]
-                    if video.category in config.mythtv.categories
-                    else None
-                )
-                if cat_path:
-                    vid["Coverart"] = vid["CoverFile"] = (
-                        f"{ca_sg}/{cat_path}/{video.poster}"
-                    )
+        if video.poster:
+            poster_path = self.get_poster_path(video.category, video.poster)
+            if poster_path:
+                vid["Coverart"] = vid["CoverFile"] = poster_path
         if video.webref:
             vid["Inetref"] = video.webref.ref
 
