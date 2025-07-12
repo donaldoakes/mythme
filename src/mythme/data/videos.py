@@ -15,7 +15,7 @@ from mythme.utils.mythtv import (
     get_storage_group_dirs,
     paging_params,
 )
-from mythme.utils.text import gen_hash, trim_article
+from mythme.utils.text import gen_hash, safe_filename, trim_article
 from mythme.utils.config import config
 from mythme.utils.log import logger
 
@@ -127,6 +127,7 @@ class VideoData:
     def get_filepath(
         self, title: str, category: Optional[str] = None, medium: Optional[str] = None
     ) -> Optional[str]:
+        filename = safe_filename(title)
         catdir = self.get_category_dir(category)
         if not catdir:
             return None
@@ -137,7 +138,7 @@ class VideoData:
             logger.debug(f"Skipping DVD title '{title}'")
             return None
         ext = medium.lower()
-        return f"{catdir}/{title}.{ext}"
+        return f"{catdir}/{filename}.{ext}"
 
     def add_video(self, filepath: str, host: str) -> bool:
         """Add video metadata. File should exist on fs."""

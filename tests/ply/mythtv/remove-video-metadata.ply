@@ -1,5 +1,5 @@
 remove-video-metadata:
-  url: ${mythtv.apiUrl}/Video/RemoveVideoFromDB?Id=126881
+  url: ${mythtv.apiUrl}/Video/RemoveVideoFromDB?Id=126885
   method: POST
   headers:
     Accept: application/json
