@@ -94,7 +94,7 @@ class VideoData:
 
     def get_db_video_id(self, filepath: str) -> Optional[int]:
         with get_connection() as conn:
-            with conn.cursor() as cursor:
+            with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(
                     "SELECT intid FROM videometadata WHERE filename = %(filename)s",
                     {"filename": filepath},
