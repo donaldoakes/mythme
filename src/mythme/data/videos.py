@@ -235,7 +235,9 @@ class VideoData:
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 for fs_filepath in fs_filepaths:
-                    if fs_filepath not in db_filepaths:
+                    if (
+                        fs_filepath not in db_filepaths and fs_filepath.rfind(".") > 0
+                    ):  # not known and not hidden
                         logger.info(f"Found new video file: {fs_filepath}")
                         data = (
                             self.base_sql_data(fs_filepath)
@@ -354,6 +356,7 @@ class VideoData:
                 if len(directors):
                     director = ", ".join(directors)
             return {
+                "title": video.title,
                 "year": video.year or 0,
                 "releasedate": f"{video.year}-01-01" if video.year else "0000-00-00",
                 "userrating": (video.rating or 0) * 2,
