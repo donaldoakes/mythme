@@ -16,92 +16,36 @@ post-video-file:
           "shade": "light"
         }
       },
-      "title": "Ben-Hur: A Tale of the Christ",
-      "start": "2021-08-13T00:00:00.000Z",
-      "end": "2021-08-13T02:45:00.000Z",
-      "description": "In this silent classic, Judah ben-Hur (Ramon Novarro) discovers that he has been betrayed by his childhood friend Messala (Francis X. Bushman), leading to separation from his family. Punished for an accident, Ben-Hur is unjustly forced to serve on a Roman ship, where he becomes a friend to the vessel's admiral, Quintus Arrius (Frank Currier). Eventually, Ben-Hur has the chance to compete against Messala in a chariot race, providing him with a shot at vengeance.",
+      "title": "The Adventures of Prince Achmed",
+      "start": "2025-05-05T04:30:00.000Z",
+      "end": "2025-05-05T06:00:00.000Z",
+      "description": "A handsome prince with a flying horse befriends a witch, meets Aladdin, and battles demons to win a princess' heart.",
       "type": "movie",
-      "category": "Historical drama",
+      "category": "Animated",
       "year": 1925,
-      "rating": 4.375,
+      "rating": 3.125,
       "credits": [
         {
-          "name": "Ramon Novarro",
-          "role": "actor"
-        },
-        {
-          "name": "Kathleen Key",
-          "role": "actor"
-        },
-        {
-          "name": "Winter Hall",
-          "role": "actor"
-        },
-        {
-          "name": "Dale Fuller",
-          "role": "actor"
-        },
-        {
-          "name": "Charles Belcher",
-          "role": "actor"
-        },
-        {
-          "name": "Frank Currier",
-          "role": "actor"
-        },
-        {
-          "name": "Mitchell Lewis",
-          "role": "actor"
-        },
-        {
-          "name": "Nigel de Brulier",
-          "role": "actor"
-        },
-        {
-          "name": "Carmel Myers",
-          "role": "actor"
-        },
-        {
-          "name": "Betty Bronson",
-          "role": "actor"
-        },
-        {
-          "name": "Claire McDowell",
-          "role": "actor"
-        },
-        {
-          "name": "May McAvoy",
-          "role": "actor"
-        },
-        {
-          "name": "Francis X. Bushman",
-          "role": "actor"
-        },
-        {
-          "name": "Leo White",
-          "role": "actor"
-        },
-        {
-          "name": "Fred Niblo",
+          "name": "Lotte Reiniger",
           "role": "director"
         },
         {
-          "name": "Kevin Brownlow",
-          "role": "producer"
+          "name": "Karl Koch",
+          "role": "director"
         },
         {
-          "name": "David Gill",
-          "role": "producer"
-        },
-        {
-          "name": "Carey Wilson",
+          "name": "Lotte Reiniger",
           "role": "writer"
+        },
+        {
+          "name": "Wolfgang Zeller",
+          "role": "guest"
         }
       ],
-      "recid": 155,
+      "recid": 7192,
       "status": "Recorded",
-      "file": "20767_20210813000000.ts",
-      "size": 4920272456,
+      "file": "20767_20250505043000.ts",
+      "size": 2863812084,
       "group": "Default",
       "transferring": true
     }
