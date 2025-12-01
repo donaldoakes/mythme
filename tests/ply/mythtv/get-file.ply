@@ -1,5 +1,5 @@
 get-file:
-  url: ${mythtv.apiUrl}/Content/GetFile?StorageGroup=Default&FileName=20767_20210812215900.ts
+  url: ${mythtv.apiUrl}/Content/GetFile?StorageGroup=Default&FileName=20735_20210912040000.ts
   method: GET
   headers:
     Accept: application/json

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from httpx import AsyncClient
+from typing_extensions import Optional
 from mythme.utils.config import config
 from mythme.utils.log import logger
 from mythme.utils.media import (
@@ -13,7 +14,7 @@ router = APIRouter()
 
 
 @router.get("/files/{path:path}")
-async def receive_file(path: str, group: str):
+async def receive_file(path: str, group: str, download: Optional[str] = None):
     async def stream_response():
         async with AsyncClient() as client:
             async with client.stream(
@@ -32,10 +33,14 @@ async def receive_file(path: str, group: str):
                     if chunk:
                         yield chunk
 
+    headers = {}
+    if download:
+        headers = {"content-disposition": f"attachment; filename={download}"}
     return StreamingResponse(
         stream_response(),
         status_code=200,
         media_type="application/octet-stream",
+        headers=headers,
     )
 
 
