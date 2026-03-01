@@ -1,3 +1,4 @@
+from typing import Optional
 from dataclasses import dataclass
 
 
@@ -18,7 +19,13 @@ class MythtvConfig:
 
 
 @dataclass
+class DailyVidConfig:
+    psv_file: str
+
+
+@dataclass
 class MythmeConfig:
     mythme_dir: str
     database: DbConnectConfig
     mythtv: MythtvConfig
+    dailyvid: Optional[DailyVidConfig] = None

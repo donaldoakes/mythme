@@ -6,7 +6,12 @@ import xml.etree.ElementTree as ET  # nosec B405 > python 3.6
 import mariadb
 from dotenv import load_dotenv
 from yaml import safe_load
-from mythme.model.config import DbConnectConfig, MythmeConfig, MythtvConfig
+from mythme.model.config import (
+    DailyVidConfig,
+    DbConnectConfig,
+    MythmeConfig,
+    MythtvConfig,
+)
 from mythme.model.setting import Setting
 from mythme.utils.log import logger
 
@@ -135,6 +140,9 @@ WHERE value in ('BackendStatusPort', 'BackendServerAddr')"""
         database=db_config,
         mythtv=myth_config,
     )
+
+    if "dailyvid" in cfg:
+        mythme_config.dailyvid = DailyVidConfig(psv_file=cfg["dailyvid"]["psv_file"])
 
     logger.debug(f"Loaded mythme config: {mythme_config}")
 

@@ -6,6 +6,7 @@ from typing import Optional, Tuple, Union
 from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.video import Video, VideosResponse, WebRef
+from mythme.utils.dailyvids import load_watched_vids
 from mythme.utils.db import get_connection
 from mythme.utils.media import media_file_path
 from mythme.utils.mythtv import (
@@ -21,7 +22,7 @@ from mythme.utils.log import logger
 
 
 class VideoData:
-    fields = [
+    db_fields = [
         "host",
         "filename",
         "title",
@@ -49,7 +50,7 @@ class VideoData:
         "category",
     ]
 
-    values = [f"%({field})s" for field in fields]
+    values = [f"%({field})s" for field in db_fields]
 
     def get_videos(self, query: Query) -> VideosResponse:
         """Uses the MythTV API"""
@@ -77,6 +78,11 @@ class VideoData:
                 key=lambda vid: self.sort(vid, query.sort),
                 reverse=True if query.sort.order == "desc" else False,
             )
+
+        watched_videos = load_watched_vids(videos)
+        for vid in videos:
+            if vid.file in watched_videos:
+                vid.watched = watched_videos[vid.file]
 
         return VideosResponse(videos=videos, total=total)
 
@@ -199,13 +205,16 @@ class VideoData:
         return filepaths
 
     def get_insert_sql(self) -> str:
-        return f"INSERT INTO videometadata ({", ".join(self.fields)}) VALUES ({", ".join(self.values)})"  # noqa: E501
+        return f"INSERT INTO videometadata ({', '.join(self.db_fields)}) VALUES ({', '.join(self.values)})"  # noqa: E501 # nosec B608
 
     def get_update_sql(self) -> str:
         return (
-            "UPDATE videometadata SET "
+            "UPDATE videometadata SET "  # nosec B608
             + ", ".join(
-                [f"{field} = {self.values[i]}" for i, field in enumerate(self.fields)]
+                [
+                    f"{field} = {self.values[i]}"
+                    for i, field in enumerate(self.db_fields)
+                ]
             )
             + " WHERE filename = %(filename)s"
         )
