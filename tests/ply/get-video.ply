@@ -1,5 +1,5 @@
 get-video:
-  url: ${apiUrl}/videos/42460
+  url: ${apiUrl}/videos/267890
   method: GET
   headers:
     Accept: application/json

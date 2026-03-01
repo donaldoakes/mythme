@@ -1,0 +1,5 @@
+get-subs-public-key:
+  url: ${apiUrl}/subscription-key
+  method: GET
+  headers:
+    Accept: application/json

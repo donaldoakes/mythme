@@ -1,6 +1,8 @@
 import os
+import asyncio
 import shutil
 from fastapi import APIRouter, Request, HTTPException, UploadFile
+from fastapi.responses import StreamingResponse
 from mythme.data.recordings import RecordingsData
 from mythme.data.videos import VideoData
 from mythme.model.api import MessageResponse
@@ -184,3 +186,25 @@ async def upload_poster(file: UploadFile, category: str) -> MessageResponse:
         f.write(contents)
 
     return MessageResponse(message=f"Poster file saved for category: {category}")
+
+
+async def video_streamer():
+    """Generator that reading a file as it's written."""
+    file_path = "notes/stream.mp4"
+    # async with aiofiles.open(file_path, mode="rb") as f:
+    with open(file_path, "rb") as f:
+        while True:
+            chunk = f.read(1024 * 1024)  # Read 1MB chunks
+            if not chunk:
+                # If no data, wait a bit for more to be written
+                await asyncio.sleep(1)
+                # Check again, if still no data, break (file closed)
+                if not f.read(1):
+                    break
+            yield chunk
+
+
+@router.get("/stream-video")
+async def stream_video():
+
+    return StreamingResponse(video_streamer(), media_type="video/mp4")

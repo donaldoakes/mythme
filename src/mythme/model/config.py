@@ -18,7 +18,15 @@ class MythtvConfig:
 
 
 @dataclass
+class WebpushConfig:
+    public_keyfile: str
+    private_keyfile: str
+    mailto: str
+
+
+@dataclass
 class MythmeConfig:
     mythme_dir: str
     database: DbConnectConfig
     mythtv: MythtvConfig
+    webpush: WebpushConfig | None = None
