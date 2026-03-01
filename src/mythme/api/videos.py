@@ -204,7 +204,11 @@ async def video_streamer():
             yield chunk
 
 
-@router.get("/stream-video")
-async def stream_video():
+@router.get("/mythfe")
+async def mythfe():
 
-    return StreamingResponse(video_streamer(), media_type="video/mp4")
+    proc = await asyncio.create_subprocess_exec("/usr/local/scripts/mythfe.sh")
+
+    await proc.wait()
+
+    return {"message": "YEP"}
