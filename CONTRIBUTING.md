@@ -2,7 +2,7 @@
 ```
 git clone https://github.com/donaldoakes/mythme.git
 cd mythme
-python -m venv .venv
+python3.12 -m venv .venv
 . .venv/bin/activate
 brew install mariadb-connector-c
 pip install -r requirements-dev.txt
