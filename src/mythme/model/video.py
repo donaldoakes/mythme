@@ -53,3 +53,7 @@ class VideoSyncRequest(BaseModel):
 class VideoSyncResponse(BaseModel):
     updated: list[str]
     missing: list[str]
+
+
+class VideoPlaybackRequest(BaseModel):
+    video_id: int

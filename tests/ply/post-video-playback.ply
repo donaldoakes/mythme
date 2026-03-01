@@ -1,0 +1,10 @@
+post-video-playback:
+  url: ${apiUrl}/video-playback
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body: |-
+    {
+      "video_id": 1234
+    }

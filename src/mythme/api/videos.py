@@ -1,8 +1,9 @@
 import os
 import asyncio
 import shutil
+import socket
+import re
 from fastapi import APIRouter, Request, HTTPException, UploadFile
-from fastapi.responses import StreamingResponse
 from mythme.data.recordings import RecordingsData
 from mythme.data.videos import VideoData
 from mythme.model.api import MessageResponse
@@ -10,6 +11,7 @@ from mythme.model.recording import Recording
 from mythme.model.video import (
     DeleteMetadataResponse,
     Video,
+    VideoPlaybackRequest,
     VideoScanRequest,
     VideoScanResponse,
     VideoSyncRequest,
@@ -188,27 +190,32 @@ async def upload_poster(file: UploadFile, category: str) -> MessageResponse:
     return MessageResponse(message=f"Poster file saved for category: {category}")
 
 
-async def video_streamer():
-    """Generator that reading a file as it's written."""
-    file_path = "notes/stream.mp4"
-    # async with aiofiles.open(file_path, mode="rb") as f:
-    with open(file_path, "rb") as f:
-        while True:
-            chunk = f.read(1024 * 1024)  # Read 1MB chunks
-            if not chunk:
-                # If no data, wait a bit for more to be written
-                await asyncio.sleep(1)
-                # Check again, if still no data, break (file closed)
-                if not f.read(1):
-                    break
-            yield chunk
+@router.post("/video-playback", response_model_exclude_none=True)
+async def play_video(request: Request) -> MessageResponse:
 
+    body = await request.json()
+    playback_request = VideoPlaybackRequest.model_validate(body)
 
-@router.get("/mythfe")
-async def mythfe():
+    client = request.client
+    # ip = client.host
 
-    proc = await asyncio.create_subprocess_exec("/usr/local/scripts/mythfe.sh")
+    # proc = await asyncio.create_subprocess_exec("/usr/local/scripts/mythfe.sh")
+    # await proc.wait()
 
-    await proc.wait()
+    # ip = ipaddress.ip_address("192.168.0.70")
+    ip = "192.168.0.70"
+    port = 6546
 
-    return {"message": "YEP"}
+    client_socket = socket.socket()
+    client_socket.connect((ip, port))
+
+    client_socket.send(("message HELLO FROM MYTHME\n").encode("utf-8"))
+    # prompt = re.compile(b"([\r\n.]*)\r\n# "
+    data = client_socket.recv(4096).decode()
+    print("Response from the server: " + data)
+    client_socket.send(b"exit")
+    client_socket.close()
+
+    return MessageResponse(
+        message=f"Video playback initiated: {playback_request.video_id} on {ip}"
+    )
