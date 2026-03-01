@@ -2,7 +2,7 @@ import os
 import socket
 from pathlib import Path
 from typing import Any, Optional
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405 > python 3.6
 import mariadb
 from dotenv import load_dotenv
 from yaml import safe_load
@@ -57,15 +57,15 @@ def load_config() -> MythmeConfig:
             logger.info(f"Loading DB config from file: {mythtv_config}")
             with open(mythtv_config, "r") as f:
                 mythtv_cfg = f.read()
-                root = ET.fromstring(mythtv_cfg)
+                root = ET.fromstring(mythtv_cfg)  # nosec B314 > python 3.6
                 database = root.find("Database")
                 if database:
                     db_config = DbConnectConfig(
-                        host=database.findtext("Host"),
-                        port=int(database.findtext("Port")),
-                        username=database.findtext("UserName"),
-                        password=database.findtext("Password"),
-                        database=database.findtext("DatabaseName"),
+                        host=database.findtext("Host") or "",
+                        port=int(database.findtext("Port") or "0"),
+                        username=database.findtext("UserName") or "",
+                        password=database.findtext("Password") or "",
+                        database=database.findtext("DatabaseName") or "",
                     )
 
     if db_config is None:
