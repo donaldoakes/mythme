@@ -1,9 +1,11 @@
 import os
 import shutil
 from fastapi import APIRouter, Request, HTTPException, UploadFile
+from fastapi.responses import PlainTextResponse
 from mythme.data.recordings import RecordingsData
 from mythme.data.videos import VideoData
 from mythme.model.api import MessageResponse
+from mythme.model.query import Criterion, Paging, Query, Sort
 from mythme.model.recording import Recording
 from mythme.model.video import (
     DeleteMetadataResponse,
@@ -15,6 +17,7 @@ from mythme.model.video import (
     VideosResponse,
 )
 from mythme.query.queries import parse_params
+from mythme.utils.dailyvids import to_psv
 from mythme.utils.mythtv import get_myth_hostname, get_storage_group_dirs
 from mythme.utils.log import logger
 
@@ -184,3 +187,15 @@ async def upload_poster(file: UploadFile, category: str) -> MessageResponse:
         f.write(contents)
 
     return MessageResponse(message=f"Poster file saved for category: {category}")
+
+
+@router.get("/dailyvids-psv", response_class=PlainTextResponse)
+def get_dailyvids():
+    vids = VideoData().get_videos(
+        Query(
+            criteria=[Criterion(name="movies", value="false")],
+            sort=Sort(name="file"),
+            paging=Paging(offset=0, limit=10000),
+        )
+    )
+    return PlainTextResponse(content=to_psv(vids.videos), media_type="text/plain")

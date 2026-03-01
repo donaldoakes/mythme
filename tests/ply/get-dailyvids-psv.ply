@@ -1,0 +1,5 @@
+get-dailyvids-psv:
+  url: ${apiUrl}/dailyvids-psv
+  method: GET
+  headers:
+    Accept: application/json

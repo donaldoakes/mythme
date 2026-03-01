@@ -6,7 +6,7 @@ from mythme.utils.log import logger
 DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
-def load_watched_vids(videos: list[Video] = []) -> dict[str, datetime]:
+def load_watched_vids(videos: list[Video]) -> dict[str, datetime]:
     video_files = [vid.file for vid in videos]
     watched_vids: dict[str, datetime] = {}
     if not config.dailyvid:
@@ -21,3 +21,8 @@ def load_watched_vids(videos: list[Video] = []) -> dict[str, datetime]:
             else:
                 logger.error(f"Unfound dailyvid on line {i + 1}: '{parts[0]}'")
     return watched_vids
+
+
+def to_psv(videos: list[Video]) -> str:
+    lines = [f"{v.file}|{v.watched}" for v in videos if v.watched]
+    return "\n".join(lines)
