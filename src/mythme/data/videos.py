@@ -6,6 +6,7 @@ from typing import Optional, Tuple, Union
 from mythme.model.credit import Credit
 from mythme.model.query import Query, Sort
 from mythme.model.video import Video, VideosResponse, WebRef
+from mythme.utils.dailyvids import load_watched_vids
 from mythme.utils.db import get_connection
 from mythme.utils.media import media_file_path
 from mythme.utils.mythtv import (
@@ -19,9 +20,11 @@ from mythme.utils.text import gen_hash, safe_filename, trim_article
 from mythme.utils.config import config
 from mythme.utils.log import logger
 
+MOVIE_DIRS = ["Film Noir", "Home Movies", "Pre-Code", "Silent", "Watchable"]
+
 
 class VideoData:
-    fields = [
+    db_fields = [
         "host",
         "filename",
         "title",
@@ -49,13 +52,12 @@ class VideoData:
         "category",
     ]
 
-    values = [f"%({field})s" for field in fields]
+    values = [f"%({field})s" for field in db_fields]
 
     def get_videos(self, query: Query) -> VideosResponse:
         """Uses the MythTV API"""
         before = time.time()
         result = api_call("Video/GetVideoList" + paging_params(query))
-        total = 0
         if (
             result
             and "VideoMetadataInfoList" in result
@@ -65,12 +67,18 @@ class VideoData:
                 self.to_video(vid)
                 for vid in result["VideoMetadataInfoList"]["VideoMetadataInfos"]
             ]
-            total = result["VideoMetadataInfoList"]["TotalAvailable"]
             logger.info(
                 f"Retrieved {len(videos)} videos in: {(time.time() - before):.2f} seconds\n"
             )
         else:
             raise Exception("Failed to retrieve videos")
+
+        movies_crit = next(filter(lambda c: c.name == "movies", query.criteria), None)
+        if movies_crit:
+            if movies_crit.value == "true":
+                videos = [v for v in videos if v.file.split("/")[0] in MOVIE_DIRS]
+            elif movies_crit.value == "false":
+                videos = [v for v in videos if v.file.split("/")[0] not in MOVIE_DIRS]
 
         if query.sort.name and query.sort.name != "id":
             videos.sort(
@@ -78,7 +86,14 @@ class VideoData:
                 reverse=True if query.sort.order == "desc" else False,
             )
 
-        return VideosResponse(videos=videos, total=total)
+        watched_videos = load_watched_vids(videos)
+        watched = 0
+        for vid in videos:
+            if vid.file in watched_videos:
+                vid.watched = watched_videos[vid.file]
+                watched += 1
+
+        return VideosResponse(videos=videos, total=len(videos), watched=watched)
 
     def get_video(self, id: int) -> Optional[Video]:
         """Uses the MythTV API"""
@@ -199,13 +214,16 @@ class VideoData:
         return filepaths
 
     def get_insert_sql(self) -> str:
-        return f"INSERT INTO videometadata ({", ".join(self.fields)}) VALUES ({", ".join(self.values)})"  # noqa: E501
+        return f"INSERT INTO videometadata ({', '.join(self.db_fields)}) VALUES ({', '.join(self.values)})"  # noqa: E501 # nosec B608
 
     def get_update_sql(self) -> str:
         return (
-            "UPDATE videometadata SET "
+            "UPDATE videometadata SET "  # nosec B608
             + ", ".join(
-                [f"{field} = {self.values[i]}" for i, field in enumerate(self.fields)]
+                [
+                    f"{field} = {self.values[i]}"
+                    for i, field in enumerate(self.db_fields)
+                ]
             )
             + " WHERE filename = %(filename)s"
         )

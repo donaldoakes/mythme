@@ -1,4 +1,5 @@
 from typing import Optional, Union
+from datetime import datetime
 from pydantic import BaseModel
 
 from mythme.model.credit import Credit
@@ -26,11 +27,13 @@ class Video(BaseModel):
     poster: Optional[str] = None
     webref: Optional[WebRef] = None
     medium: Optional[str] = None
+    watched: Optional[datetime] = None
 
 
 class VideosResponse(BaseModel):
     videos: list[Video]
     total: int
+    watched: int
 
 
 class DeleteMetadataResponse(BaseModel):

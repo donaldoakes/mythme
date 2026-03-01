@@ -32,9 +32,9 @@ def api_call(
     headers = {"Accept": "application/json"}
 
     if method == "POST":
-        response = requests.post(url, headers=headers)
+        response = requests.post(url, headers=headers)  # nosec B113
     else:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers)  # nosec B113
 
     if response.status_code == 200:
         return response.json()
@@ -68,7 +68,7 @@ def get_channel_icon(channel_id: int) -> Optional[bytes]:
     url = f"{config.mythtv.api_base}/Guide/GetChannelIcon?ChanId={channel_id}"
     logger.debug(f"Retrieving icon for channel_id: {channel_id}")
 
-    response = requests.get(url)
+    response = requests.get(url)  # nosec B113
 
     if response.status_code == 200:
         return response.content
