@@ -33,6 +33,7 @@ class Video(BaseModel):
 class VideosResponse(BaseModel):
     videos: list[Video]
     total: int
+    watched: int
 
 
 class DeleteMetadataResponse(BaseModel):

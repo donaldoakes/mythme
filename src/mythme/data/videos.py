@@ -20,6 +20,8 @@ from mythme.utils.text import gen_hash, safe_filename, trim_article
 from mythme.utils.config import config
 from mythme.utils.log import logger
 
+MOVIE_DIRS = ["Film Noir", "Home Movies", "Pre-Code", "Silent", "Watchable"]
+
 
 class VideoData:
     db_fields = [
@@ -56,7 +58,6 @@ class VideoData:
         """Uses the MythTV API"""
         before = time.time()
         result = api_call("Video/GetVideoList" + paging_params(query))
-        total = 0
         if (
             result
             and "VideoMetadataInfoList" in result
@@ -66,12 +67,18 @@ class VideoData:
                 self.to_video(vid)
                 for vid in result["VideoMetadataInfoList"]["VideoMetadataInfos"]
             ]
-            total = result["VideoMetadataInfoList"]["TotalAvailable"]
             logger.info(
                 f"Retrieved {len(videos)} videos in: {(time.time() - before):.2f} seconds\n"
             )
         else:
             raise Exception("Failed to retrieve videos")
+
+        movies_crit = next(filter(lambda c: c.name == "movies", query.criteria), None)
+        if movies_crit:
+            if movies_crit.value == "true":
+                videos = [v for v in videos if v.file.split("/")[0] in MOVIE_DIRS]
+            elif movies_crit.value == "false":
+                videos = [v for v in videos if v.file.split("/")[0] not in MOVIE_DIRS]
 
         if query.sort.name and query.sort.name != "id":
             videos.sort(
@@ -80,11 +87,13 @@ class VideoData:
             )
 
         watched_videos = load_watched_vids(videos)
+        watched = 0
         for vid in videos:
             if vid.file in watched_videos:
                 vid.watched = watched_videos[vid.file]
+                watched += 1
 
-        return VideosResponse(videos=videos, total=total)
+        return VideosResponse(videos=videos, total=len(videos), watched=watched)
 
     def get_video(self, id: int) -> Optional[Video]:
         """Uses the MythTV API"""
