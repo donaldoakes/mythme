@@ -3,6 +3,7 @@
     "ms-python.python",
     "charliermarsh.ruff",
     "matangover.mypy",
-    "ms-python.flake8"
+    "ms-python.flake8",
+    "ply-ct.vscode-ply"
   ]
 }
