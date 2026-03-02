@@ -15,6 +15,7 @@ from mythme.api import recordings
 from mythme.api import credits
 from mythme.api import videos
 from mythme.api import content
+from mythme.api import configs
 
 logger.info(f"Python: {platform.python_version()}")
 
@@ -48,6 +49,7 @@ router.include_router(recordings.router)
 router.include_router(credits.router)
 router.include_router(videos.router)
 router.include_router(content.router)
+router.include_router(configs.router)
 
 
 app = FastAPI(lifespan=lifespan)

@@ -7,10 +7,10 @@ DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 
 def load_watched_vids(videos: list[Video]) -> dict[str, datetime]:
-    video_files = [vid.file for vid in videos]
-    watched_vids: dict[str, datetime] = {}
     if not config.dailyvid:
         raise ValueError("Missing config: 'dailyvid'")
+    video_files = [vid.file for vid in videos]
+    watched_vids: dict[str, datetime] = {}
     with open(config.dailyvid.psv_file, "r") as file:
         for i, line in enumerate(file):
             parts = line.strip().split("|")
@@ -26,3 +26,28 @@ def load_watched_vids(videos: list[Video]) -> dict[str, datetime]:
 def to_psv(videos: list[Video]) -> str:
     lines = [f"{v.file}|{v.watched}" for v in videos if v.watched]
     return "\n".join(lines)
+
+
+def update_watched(video: Video) -> bool:
+    if not config.dailyvid:
+        raise ValueError("Missing config: 'dailyvid'")
+    if not video.watched:
+        return False
+    lines: list[str] = []
+    idx = -1
+    with open(config.dailyvid.psv_file, "r") as file:
+        lines = [line.strip() for line in file]
+        idx = next(
+            (i for i, ln in enumerate(lines) if ln.strip().split("|")[0] == video.file),
+            -1,
+        )
+
+    if idx >= 0:
+        lines[idx] = f"{video.file}|{video.watched}"
+    else:
+        lines.append(f"{video.file}|{video.watched}")
+    lines.sort(key=lambda line: line.strip().split("|")[0].lower())
+    with open(config.dailyvid.psv_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines))
+
+    return idx >= 0

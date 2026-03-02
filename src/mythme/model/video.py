@@ -56,3 +56,16 @@ class VideoSyncRequest(BaseModel):
 class VideoSyncResponse(BaseModel):
     updated: list[str]
     missing: list[str]
+
+
+class DailyVid(BaseModel):
+    video: Video
+    watched: int
+    total: int
+    earliest: datetime
+    latest: datetime
+
+
+class DailyVidWatched(BaseModel):
+    file: str
+    watched: datetime

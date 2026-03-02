@@ -1,11 +1,12 @@
 import os
 import time
 import textwrap
+import random
 from datetime import datetime
 from typing import Optional, Tuple, Union
 from mythme.model.credit import Credit
-from mythme.model.query import Query, Sort
-from mythme.model.video import Video, VideosResponse, WebRef
+from mythme.model.query import Criterion, Paging, Query, Sort
+from mythme.model.video import DailyVid, Video, VideosResponse, WebRef
 from mythme.utils.dailyvids import load_watched_vids
 from mythme.utils.db import get_connection
 from mythme.utils.media import media_file_path
@@ -328,6 +329,38 @@ class VideoData:
                         missing.append(filepath)
 
         return (updated, missing)
+
+    def next_dailyvid(self) -> Optional[DailyVid]:
+        videos = self.get_videos(
+            Query(
+                criteria=[Criterion(name="movies", value="false")],
+                sort=Sort(name="file"),
+                paging=Paging(offset=0, limit=10000),
+            )
+        ).videos
+        watched: list[Video] = []
+        unwatched: list[Video] = []
+        for video in videos:
+            (watched if video.watched else unwatched).append(video)
+
+        if len(unwatched) == 0:
+            return None
+
+        vid = unwatched[random.randint(0, len(unwatched) - 1)]  # nosec B311 no security related
+
+        # watched list always has watched prop
+        earliest_watched = min(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
+        earliest: datetime = earliest_watched.watched  # type: ignore[assignment]
+        latest_watched = max(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
+        latest: datetime = latest_watched.watched  # type: ignore[assignment]
+
+        return DailyVid(
+            video=vid,
+            watched=len(watched),
+            total=len(videos),
+            earliest=earliest,
+            latest=latest,
+        )
 
     def sort(self, video: Video, sort: Sort) -> tuple:
         """Sort according to query."""

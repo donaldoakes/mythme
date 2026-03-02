@@ -1,0 +1,11 @@
+patch-dailyvid:
+  url: ${apiUrl}/dailyvid
+  method: PATCH
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body: |-
+    {
+      "file": "2020s/Richy Mitch & The Coal Miners/Evergreen (Montana 2023) - Richy Mitch & The Coal Miners.mp4",
+      "watched": "2026-03-02T13:37:51"
+    }

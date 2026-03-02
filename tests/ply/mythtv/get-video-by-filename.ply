@@ -1,5 +1,5 @@
 get-video-by-filename:
-  url: ${mythtv.apiUrl}/Video/GetVideoByFileName?FileName=Silent/The Red Lily.ts
+  url: ${mythtv.apiUrl}/Video/GetVideoByFileName?FileName=2020s/Richy Mitch %26 The Coal Miners/Evergreen (Montana 2023) - Richy Mitch %26 The Coal Miners.mp4
   method: GET
   headers:
     Accept: application/json
