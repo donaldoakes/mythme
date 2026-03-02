@@ -347,15 +347,19 @@ class VideoData:
             return None
 
         vid = unwatched[random.randint(0, len(unwatched) - 1)]  # nosec B311 no security related
+
         # watched list always has watched prop
+        earliest_watched = min(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
+        earliest: datetime = earliest_watched.watched  # type: ignore[assignment]
         latest_watched = max(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
         latest: datetime = latest_watched.watched  # type: ignore[assignment]
 
         return DailyVid(
             video=vid,
-            latest=latest,
             watched=len(watched),
             total=len(videos),
+            earliest=earliest,
+            latest=latest,
         )
 
     def sort(self, video: Video, sort: Sort) -> tuple:

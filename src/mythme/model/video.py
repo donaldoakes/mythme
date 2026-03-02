@@ -60,9 +60,10 @@ class VideoSyncResponse(BaseModel):
 
 class DailyVid(BaseModel):
     video: Video
-    latest: datetime
     watched: int
     total: int
+    earliest: datetime
+    latest: datetime
 
 
 class DailyVidWatched(BaseModel):

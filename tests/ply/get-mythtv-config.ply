@@ -1,0 +1,5 @@
+get-mythtv-config:
+  url: ${apiUrl}/configs/mythtv
+  method: GET
+  headers:
+    Accept: application/json
