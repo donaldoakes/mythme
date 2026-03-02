@@ -1,0 +1,5 @@
+get-dailyvid:
+  url: ${apiUrl}/dailyvid
+  method: GET
+  headers:
+    Accept: application/json

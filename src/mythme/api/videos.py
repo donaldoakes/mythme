@@ -8,6 +8,7 @@ from mythme.model.api import MessageResponse
 from mythme.model.query import Criterion, Paging, Query, Sort
 from mythme.model.recording import Recording
 from mythme.model.video import (
+    DailyVid,
     DeleteMetadataResponse,
     Video,
     VideoScanRequest,
@@ -187,6 +188,14 @@ async def upload_poster(file: UploadFile, category: str) -> MessageResponse:
         f.write(contents)
 
     return MessageResponse(message=f"Poster file saved for category: {category}")
+
+
+@router.get("/dailyvid", response_model_exclude_none=True)
+def get_dailyvid() -> DailyVid:
+    dailyvid = VideoData().next_dailyvid()
+    if dailyvid is None:
+        raise HTTPException(status_code=404)
+    return dailyvid
 
 
 @router.get("/dailyvids-psv", response_class=PlainTextResponse)
