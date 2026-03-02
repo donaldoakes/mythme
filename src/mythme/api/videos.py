@@ -207,7 +207,7 @@ def dailyvid_watched(dv_watched: DailyVidWatched) -> MessageResponse:
     video.watched = dv_watched.watched
     update_watched(video)
 
-    return MessageResponse(message=f"Video ${video.id} watched: {dv_watched.watched}")
+    return MessageResponse(message=f"Video {video.id} watched: {dv_watched.watched}")
 
 
 @router.get("/dailyvids-psv", response_class=PlainTextResponse)
