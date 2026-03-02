@@ -63,3 +63,8 @@ class DailyVid(BaseModel):
     latest: datetime
     watched: int
     total: int
+
+
+class DailyVidWatched(BaseModel):
+    file: str
+    watched: datetime

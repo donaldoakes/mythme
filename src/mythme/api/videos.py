@@ -9,6 +9,7 @@ from mythme.model.query import Criterion, Paging, Query, Sort
 from mythme.model.recording import Recording
 from mythme.model.video import (
     DailyVid,
+    DailyVidWatched,
     DeleteMetadataResponse,
     Video,
     VideoScanRequest,
@@ -18,7 +19,7 @@ from mythme.model.video import (
     VideosResponse,
 )
 from mythme.query.queries import parse_params
-from mythme.utils.dailyvids import to_psv
+from mythme.utils.dailyvids import to_psv, update_watched
 from mythme.utils.mythtv import get_myth_hostname, get_storage_group_dirs
 from mythme.utils.log import logger
 
@@ -196,6 +197,17 @@ def get_dailyvid() -> DailyVid:
     if dailyvid is None:
         raise HTTPException(status_code=404)
     return dailyvid
+
+
+@router.patch("/dailyvid", response_model_exclude_none=True)
+def dailyvid_watched(dv_watched: DailyVidWatched) -> MessageResponse:
+    video = VideoData().get_video_by_file(dv_watched.file)
+    if not video:
+        raise HTTPException(status_code=404, detail=f"No video: {dv_watched.file}")
+    video.watched = dv_watched.watched
+    update_watched(video)
+
+    return MessageResponse(message=f"Video ${video.id} watched: {dv_watched.watched}")
 
 
 @router.get("/dailyvids-psv", response_class=PlainTextResponse)
