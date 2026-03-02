@@ -11,41 +11,41 @@ def make_socket_mock(messages: list[bytes]) -> MagicMock:
     return mock_sock
 
 
-def test_listen_prints_button_name(capsys):
+def test_listen_invokes_callback_with_button_name():
     event = b"0000000000000001 00 KEY_UP Remote\n"
     mock_sock = make_socket_mock([event])
+    received: list[str] = []
     with patch("mythme.utils.lirc.socket_module.socket", return_value=mock_sock):
-        listen("/fake/lircd")
-    captured = capsys.readouterr()
-    assert captured.out == "KEY_UP\n"
+        listen(received.append, "/fake/lircd")
+    assert received == ["KEY_UP"]
 
 
-def test_listen_multiple_events(capsys):
+def test_listen_multiple_events():
     events = b"0000000000000001 00 KEY_UP Remote\n0000000000000002 00 KEY_DOWN Remote\n"
     mock_sock = make_socket_mock([events])
+    received: list[str] = []
     with patch("mythme.utils.lirc.socket_module.socket", return_value=mock_sock):
-        listen("/fake/lircd")
-    captured = capsys.readouterr()
-    assert captured.out == "KEY_UP\nKEY_DOWN\n"
+        listen(received.append, "/fake/lircd")
+    assert received == ["KEY_UP", "KEY_DOWN"]
 
 
-def test_listen_ignores_malformed_lines(capsys):
+def test_listen_ignores_malformed_lines():
     events = b"bad\n0000000000000001 00 KEY_OK Remote\n"
     mock_sock = make_socket_mock([events])
+    received: list[str] = []
     with patch("mythme.utils.lirc.socket_module.socket", return_value=mock_sock):
-        listen("/fake/lircd")
-    captured = capsys.readouterr()
-    assert captured.out == "KEY_OK\n"
+        listen(received.append, "/fake/lircd")
+    assert received == ["KEY_OK"]
 
 
-def test_listen_handles_split_messages(capsys):
+def test_listen_handles_split_messages():
     part1 = b"0000000000000001 00 KEY_"
     part2 = b"SELECT Remote\n"
     mock_sock = make_socket_mock([part1, part2])
+    received: list[str] = []
     with patch("mythme.utils.lirc.socket_module.socket", return_value=mock_sock):
-        listen("/fake/lircd")
-    captured = capsys.readouterr()
-    assert captured.out == "KEY_SELECT\n"
+        listen(received.append, "/fake/lircd")
+    assert received == ["KEY_SELECT"]
 
 
 def test_default_socket_path():
@@ -55,5 +55,5 @@ def test_default_socket_path():
 def test_listen_connects_to_socket_path():
     mock_sock = make_socket_mock([b""])
     with patch("mythme.utils.lirc.socket_module.socket", return_value=mock_sock):
-        listen("/custom/lircd")
+        listen(lambda b: None, "/custom/lircd")
     mock_sock.connect.assert_called_once_with("/custom/lircd")
