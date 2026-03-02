@@ -6,6 +6,6 @@ patch-dailyvid:
     Content-Type: application/json
   body: |-
     {
-      "file": "1980s/Eurythmics/Here Comes The Rain Again - Eurythmics.mpg",
-      "watched": "2026-03-01T17:37:51"
+      "file": "2020s/Richy Mitch & The Coal Miners/Evergreen (Montana 2023) - Richy Mitch & The Coal Miners.mp4",
+      "watched": "2026-03-02T13:37:51"
     }
