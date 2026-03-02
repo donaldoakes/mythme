@@ -201,7 +201,7 @@ def get_dailyvid() -> DailyVid:
 
 @router.patch("/dailyvid", response_model_exclude_none=True)
 def dailyvid_watched(dv_watched: DailyVidWatched) -> MessageResponse:
-    video = VideoData().get_video_by_file(dv_watched.file)
+    video = VideoData().get_video_by_file(dv_watched.file.replace("&", "%26"))
     if not video:
         raise HTTPException(status_code=404, detail=f"No video: {dv_watched.file}")
     video.watched = dv_watched.watched
