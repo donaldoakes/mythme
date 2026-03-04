@@ -348,11 +348,14 @@ class VideoData:
 
         vid = unwatched[random.randint(0, len(unwatched) - 1)]  # nosec B311 no security related
 
-        # watched list always has watched prop
-        earliest_watched = min(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
-        earliest: datetime = earliest_watched.watched  # type: ignore[assignment]
-        latest_watched = max(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
-        latest: datetime = latest_watched.watched  # type: ignore[assignment]
+        earliest = latest = datetime.min
+
+        if (len(watched)) > 0:
+            # watched list always has watched prop
+            earliest_watched = min(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
+            earliest = earliest_watched.watched  # type: ignore[assignment]
+            latest_watched = max(watched, key=lambda v: v.watched)  # type: ignore[arg-type,return-value]
+            latest = latest_watched.watched  # type: ignore[assignment]
 
         return DailyVid(
             video=vid,
