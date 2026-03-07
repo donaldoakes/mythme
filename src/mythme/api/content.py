@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Header, HTTPException
+import os
+from fastapi import APIRouter, Header, HTTPException, status
 from fastapi.responses import StreamingResponse
 from httpx import AsyncClient
 from typing_extensions import Optional
 from mythme.utils.config import config
 from mythme.utils.log import logger
 from mythme.utils.media import (
-    get_video_stream,
+    get_range,
     media_file_path,
+    send_bytes_range_requests,
     video_media_type,
 )
 
@@ -45,15 +47,40 @@ async def receive_file(path: str, group: str, download: Optional[str] = None):
 
 
 @router.get("/videos/{path:path}")
-async def stream_video(path: str, group: str, range: str = Header(None)):
-    """Does not support seek. Browser cannot play video/mp2t (ts) streams."""
-    video_path = media_file_path(group, path)
+async def stream_video(path: str, range: str = Header(None)):
+    """Browser cannot play video/mp2t (ts) streams."""
+    video_path = media_file_path("Videos", path)
     if not video_path:
-        raise HTTPException(
-            status_code=404, detail=f"Group:File not found: {group}:{path}"
-        )
+        raise HTTPException(status_code=404, detail=f"Video not found: {path}")
     media_type = video_media_type(path)
     if not media_type:
         raise HTTPException(status_code=400, detail=f"Unknown media type: {path}")
 
-    return StreamingResponse(get_video_stream(str(video_path)), media_type=media_type)
+    file_size = os.path.getsize(video_path)
+
+    headers = {
+        "content-type": media_type,
+        "accept-ranges": "bytes",
+        "content-encoding": "identity",
+        "content-length": str(file_size),
+        "access-control-expose-headers": (
+            "content-type, accept-ranges, content-length, "
+            "content-range, content-encoding"
+        ),
+    }
+    start = 0
+    end = file_size - 1
+    status_code = status.HTTP_200_OK
+
+    if range is not None:
+        start, end = get_range(range, file_size)
+        size = end - start + 1
+        headers["content-length"] = str(size)
+        headers["content-range"] = f"bytes {start}-{end}/{file_size}"
+        status_code = status.HTTP_206_PARTIAL_CONTENT
+
+    return StreamingResponse(
+        send_bytes_range_requests(str(video_path), start, end, 1024 * 1024),
+        headers=headers,
+        status_code=status_code,
+    )

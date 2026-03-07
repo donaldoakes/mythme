@@ -81,6 +81,10 @@ class VideoData:
             elif movies_crit.value == "false":
                 videos = [v for v in videos if v.file.split("/")[0] not in MOVIE_DIRS]
 
+        ext_crit = next(filter(lambda c: c.name == "ext", query.criteria), None)
+        if ext_crit:
+            videos = [v for v in videos if v.file.endswith(f".{ext_crit.value}")]
+
         if query.sort.name and query.sort.name != "id":
             videos.sort(
                 key=lambda vid: self.sort(vid, query.sort),
@@ -330,14 +334,15 @@ class VideoData:
 
         return (updated, missing)
 
-    def next_dailyvid(self) -> Optional[DailyVid]:
-        videos = self.get_videos(
-            Query(
-                criteria=[Criterion(name="movies", value="false")],
-                sort=Sort(name="file"),
-                paging=Paging(offset=0, limit=10000),
-            )
-        ).videos
+    def next_dailyvid(self, ext: Optional[str] = None) -> Optional[DailyVid]:
+        query = Query(
+            criteria=[Criterion(name="movies", value="false")],
+            sort=Sort(name="file"),
+            paging=Paging(offset=0, limit=10000),
+        )
+        if ext:
+            query.criteria.append(Criterion(name="ext", value=ext))
+        videos = self.get_videos(query).videos
         watched: list[Video] = []
         unwatched: list[Video] = []
         for video in videos:

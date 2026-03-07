@@ -10,6 +10,7 @@ ruff>=0.15.4,<1
 setuptools>=82.0.0,<90
 twine>=6.2.0,<7
 
+types-aiofiles
 types-requests
 types-pyyaml
 types-setuptools

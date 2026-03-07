@@ -1,5 +1,5 @@
 get-dailyvid:
-  url: ${apiUrl}/dailyvid
+  url: ${apiUrl}/dailyvid?ext=mp4
   method: GET
   headers:
     Accept: application/json

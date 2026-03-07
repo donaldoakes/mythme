@@ -1,3 +1,4 @@
+aiofiles>=25.1.0,<26
 fastapi>=0.135.1,<1
 mariadb>=1.1.14,<2
 pydantic>=2.12.5,<3

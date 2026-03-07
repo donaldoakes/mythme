@@ -1,5 +1,6 @@
 import os
 import shutil
+from typing import Optional
 from fastapi import APIRouter, Request, HTTPException, UploadFile
 from fastapi.responses import PlainTextResponse
 from mythme.data.recordings import RecordingsData
@@ -192,8 +193,8 @@ async def upload_poster(file: UploadFile, category: str) -> MessageResponse:
 
 
 @router.get("/dailyvid", response_model_exclude_none=True)
-def get_dailyvid() -> DailyVid:
-    dailyvid = VideoData().next_dailyvid()
+def get_dailyvid(ext: Optional[str] = None) -> DailyVid:
+    dailyvid = VideoData().next_dailyvid(ext)
     if dailyvid is None:
         raise HTTPException(status_code=404)
     return dailyvid
