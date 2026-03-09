@@ -81,10 +81,6 @@ class VideoData:
             elif movies_crit.value == "false":
                 videos = [v for v in videos if v.file.split("/")[0] not in MOVIE_DIRS]
 
-        ext_crit = next(filter(lambda c: c.name == "ext", query.criteria), None)
-        if ext_crit:
-            videos = [v for v in videos if v.file.endswith(f".{ext_crit.value}")]
-
         if query.sort.name and query.sort.name != "id":
             videos.sort(
                 key=lambda vid: self.sort(vid, query.sort),
@@ -92,13 +88,18 @@ class VideoData:
             )
 
         watched_videos = load_watched_vids(videos)
+        total = len(videos)
         watched = 0
         for vid in videos:
             if vid.file in watched_videos:
                 vid.watched = watched_videos[vid.file]
                 watched += 1
 
-        return VideosResponse(videos=videos, total=len(videos), watched=watched)
+        ext_crit = next(filter(lambda c: c.name == "ext", query.criteria), None)
+        if ext_crit:
+            videos = [v for v in videos if v.file.endswith(f".{ext_crit.value}")]
+
+        return VideosResponse(videos=videos, total=total, watched=watched)
 
     def get_video(self, id: int) -> Optional[Video]:
         """Uses the MythTV API"""
@@ -342,7 +343,8 @@ class VideoData:
         )
         if ext:
             query.criteria.append(Criterion(name="ext", value=ext))
-        videos = self.get_videos(query).videos
+        vids = self.get_videos(query)
+        videos = vids.videos
         watched: list[Video] = []
         unwatched: list[Video] = []
         for video in videos:
@@ -364,8 +366,8 @@ class VideoData:
 
         return DailyVid(
             video=vid,
-            watched=len(watched),
-            total=len(videos),
+            watched=vids.watched,
+            total=vids.total,
             earliest=earliest,
             latest=latest,
         )
