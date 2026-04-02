@@ -46,7 +46,7 @@ async def receive_file(path: str, group: str, download: Optional[str] = None):
     )
 
 
-@router.get("/videos/{path:path}")
+@router.get("/media/videos/{path:path}")
 async def stream_video(path: str, range: str = Header(None)):
     """Browser cannot play video/mp2t (ts) streams."""
     video_path = media_file_path("Videos", path)

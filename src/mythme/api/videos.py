@@ -35,6 +35,14 @@ def get_videos(request: Request) -> VideosResponse:
     return VideoData().get_videos(query)
 
 
+@router.get("/videos/{path:path}", response_model_exclude_none=True)
+def get_video(path: str) -> Video:
+    video = VideoData().get_video(path)
+    if video is None:
+        raise HTTPException(status_code=404)
+    return video
+
+
 @router.post("/videos", response_model_exclude_none=True)
 def create_video_metadata(video: Video) -> Video:
     video_data = VideoData()
@@ -65,14 +73,6 @@ def create_video_metadata(video: Video) -> Video:
     if not updated:
         raise HTTPException(status_code=500, detail=f"Error updating video: {filepath}")
 
-    return video
-
-
-@router.get("/videos/{id}", response_model_exclude_none=True)
-def get_video(id: int) -> Video:
-    video = VideoData().get_video(id)
-    if video is None:
-        raise HTTPException(status_code=404, detail=f"Video not found: {id}")
     return video
 
 

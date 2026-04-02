@@ -101,9 +101,9 @@ class VideoData:
 
         return VideosResponse(videos=videos, total=total, watched=watched)
 
-    def get_video(self, id: int) -> Optional[Video]:
+    def get_video(self, path: str) -> Optional[Video]:
         """Uses the MythTV API"""
-        res = api_call(f"Video/GetVideo?Id={id}")
+        res = api_call(f"/Video/GetVideoByFileName?FileName={path}")
         if (
             res
             and "VideoMetadataInfo" in res
