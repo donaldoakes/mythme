@@ -37,7 +37,7 @@ def get_videos(request: Request) -> VideosResponse:
 
 @router.get("/videos/{path:path}", response_model_exclude_none=True)
 def get_video(path: str) -> Video:
-    video = VideoData().get_video(path)
+    video = VideoData().get_video(path.replace("&", "%26"))
     if video is None:
         raise HTTPException(status_code=404)
     return video
