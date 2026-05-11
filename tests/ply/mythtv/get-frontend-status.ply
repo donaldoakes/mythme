@@ -1,0 +1,5 @@
+get-frontend-status:
+  url: ${mythtv.apiUrl}/Frontend/GetStatus
+  method: GET
+  headers:
+    Accept: application/json
