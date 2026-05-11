@@ -1,5 +1,5 @@
 get-video:
-  url: ${apiUrl}/videos/Pre-Code/The Bachelor Father.ts
+  url: ${apiUrl}/videos/Silent/Our Dancing Daughters.mpg
   method: GET
   headers:
     Accept: application/json

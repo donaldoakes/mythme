@@ -58,7 +58,21 @@ class VideoData:
     def get_videos(self, query: Query) -> VideosResponse:
         """Uses the MythTV API"""
         before = time.time()
-        result = api_call("Video/GetVideoList" + paging_params(query))
+        id_crit = next(filter(lambda c: c.name == "id", query.criteria), None)
+        if id_crit:
+            res = api_call(f"Video/GetVideo?Id={id_crit.value}")
+            if (
+                res is None
+                or not res["VideoMetadataInfo"]
+                or not res["VideoMetadataInfo"]["Id"]
+            ):
+                raise ValueError(f"Unable to retrieve video: {id_crit.value}")
+            result: Optional[dict] = {"VideoMetadataInfoList": {"Count": 1}}
+            vmis: list[dict] = [res["VideoMetadataInfo"]]
+            if result:
+                result["VideoMetadataInfoList"]["VideoMetadataInfos"] = vmis
+        else:
+            result = api_call("Video/GetVideoList" + paging_params(query))
         if (
             result
             and "VideoMetadataInfoList" in result
@@ -87,7 +101,7 @@ class VideoData:
                 reverse=True if query.sort.order == "desc" else False,
             )
 
-        watched_videos = load_watched_vids(videos)
+        watched_videos = load_watched_vids(videos, id_crit is None)
         total = len(videos)
         watched = 0
         for vid in videos:

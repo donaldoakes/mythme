@@ -1,0 +1,5 @@
+get-video-by-id:
+  url: ${apiUrl}/videos?id=319089
+  method: GET
+  headers:
+    Accept: application/json
