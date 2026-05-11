@@ -1,0 +1,5 @@
+get-recording-by-chanid-starttime:
+  url: ${apiUrl}/recorded?chanid=20767&starttime=2026-04-29T12:44:00Z
+  method: GET
+  headers:
+    Accept: application/json

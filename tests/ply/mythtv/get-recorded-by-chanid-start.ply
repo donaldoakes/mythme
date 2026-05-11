@@ -1,0 +1,5 @@
+get-recorded-by-chanid-start:
+  url: ${mythtv.apiUrl}/Dvr/GetRecorded?ChanId=20660&StartTime=2026-05-09T00:59:00Z
+  method: GET
+  headers:
+    Accept: application/json

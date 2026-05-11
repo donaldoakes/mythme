@@ -22,7 +22,21 @@ class RecordingsData:
 
     def get_recordings(self, query: Query) -> RecordingsResponse:
         before = time.time()
-        result = api_call("Dvr/GetRecordedList" + paging_params(query))
+        chanid_crit = next(filter(lambda c: c.name == "chanid", query.criteria), None)
+        starttime_crit = next(
+            filter(lambda c: c.name == "starttime", query.criteria), None
+        )
+        if chanid_crit and starttime_crit:
+            q = f"ChanId={chanid_crit.value}&StartTime={starttime_crit.value}"
+            res = api_call(f"Dvr/GetRecorded?{q}")
+            if res is None or not res["Program"] or not res["Program"]["Recording"]:
+                raise ValueError(f"Unable to retrieve recording: {q}")
+            result: Optional[dict] = {"ProgramList": {"TotalAvailable": 1}}
+            pl: list[dict] = [res["Program"]]
+            if result:
+                result["ProgramList"]["Programs"] = pl
+        else:
+            result = api_call("Dvr/GetRecordedList" + paging_params(query))
         total = 0
         if result and "ProgramList" in result and "Programs" in result["ProgramList"]:
             recordings = [

@@ -1,5 +1,5 @@
 get-video:
-  url: ${apiUrl}/videos/2000s/Chester French/She Loves Everybody - Chester French.mp4
+  url: ${apiUrl}/videos/Pre-Code/The Bachelor Father.ts
   method: GET
   headers:
     Accept: application/json
