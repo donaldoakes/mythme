@@ -148,10 +148,20 @@ class RecordingsData:
                 recording.episode = prog["Episode"]
         recording.credits = []
         if "Cast" in prog and "CastMembers" in prog["Cast"]:
-            recording.credits = [
-                Credit(name=cm["Name"], role=cm["Role"])
-                for cm in prog["Cast"]["CastMembers"]
-            ]
+            for cm in prog["Cast"]["CastMembers"]:
+                credit = Credit(name=cm["Name"], role=cm["Role"])
+                if (
+                    next(
+                        (
+                            c
+                            for c in recording.credits
+                            if c.name == credit.name and c.role == credit.role
+                        ),
+                        None,
+                    )
+                    is None
+                ):
+                    recording.credits.append(credit)
 
         return recording
 
