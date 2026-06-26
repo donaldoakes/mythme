@@ -2,5 +2,6 @@ testsLocation: tests
 
 valuesFiles:
   tests/values/localhost.json: true
+  tests/values/mythbe.json: false
   tests/values/mythbe2.json: false
   tests/values/mythtv.json: true
