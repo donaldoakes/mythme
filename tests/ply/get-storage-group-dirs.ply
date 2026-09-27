@@ -1,0 +1,5 @@
+get-storage-group-dirs:
+  url: ${apiUrl}/configs/storage-group-dirs/Default
+  method: GET
+  headers:
+    Accept: application/json
