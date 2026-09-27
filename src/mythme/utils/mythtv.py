@@ -99,7 +99,7 @@ def get_storage_group_dirs(group: str) -> Optional[list[str]]:
     else:
         hostname = get_myth_hostname()
         if hostname:
-            res = api_call(f"/Myth/GetStorageGroupDirs?GroupName={group}")
+            res = api_call(f"Myth/GetStorageGroupDirs?GroupName={group}")
             if (
                 res
                 and "StorageGroupDirList" in res
