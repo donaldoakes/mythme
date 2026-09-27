@@ -7,6 +7,9 @@
       "request": "launch",
       "module": "uvicorn",
       "args": ["mythme.api.main:app", "--app-dir=src"],
+      "env": {
+        "MYTHME_LOG_LEVEL": "INFO"
+      },
       "console": "integratedTerminal",
       "justMyCode": true
     },
