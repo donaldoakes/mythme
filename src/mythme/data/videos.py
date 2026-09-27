@@ -117,7 +117,7 @@ class VideoData:
 
     def get_video(self, path: str) -> Optional[Video]:
         """Uses the MythTV API"""
-        res = api_call(f"/Video/GetVideoByFileName?FileName={path}")
+        res = api_call(f"Video/GetVideoByFileName?FileName={path}")
         if (
             res
             and "VideoMetadataInfo" in res
@@ -140,7 +140,7 @@ class VideoData:
         return None
 
     def get_video_by_file(self, filename: str) -> Optional[Video]:
-        res = api_call(f"/Video/GetVideoByFileName?FileName={filename}")
+        res = api_call(f"Video/GetVideoByFileName?FileName={filename}")
         if (
             res
             and "VideoMetadataInfo" in res
