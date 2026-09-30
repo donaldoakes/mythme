@@ -45,7 +45,7 @@ def schedule_recording(recording: RecordingRequest) -> ScheduledRecording:
         "Dvr/GetRecordSchedule",
         params={
             "ChanId": f"{recording.channel_id}",
-            "StartTime": recording.start.isoformat(),
+            "StartTime": recording.start.replace(tzinfo=None).isoformat(),
         },
     )
     if not result or "RecRule" not in result:
@@ -59,14 +59,14 @@ def schedule_recording(recording: RecordingRequest) -> ScheduledRecording:
         "Dvr/AddRecordSchedule",
         method="POST",
         params={
-            "ChanId": f"{rule["ChanId"]}",
+            "ChanId": f"{rule['ChanId']}",
             "StartTime": rule["StartTime"],
             "EndTime": rule["EndTime"],
             "Station": rule["CallSign"],
             "Type": rec_type.name,
             "Title": rule["Title"],
-            "FindDay": f"{rule["FindDay"]}",
-            "FindTime": f"{rule["FindTime"]}",
+            "FindDay": f"{rule['FindDay']}",
+            "FindTime": f"{rule['FindTime']}",
         },
     )
     if not result:
