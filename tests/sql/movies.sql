@@ -1,4 +1,3 @@
--- Active: 1720419410937@@192.168.0.70@3306@mythconverg
 SELECT
 channel.chanid, channel.channum, channel.callsign, channel.name,
 program.title, program.subtitle, program.starttime, program.endtime, program.description, program.category, program.category_type, CONVERT(program.airdate USING utf8), program.stars, program.season, program.episode, program.originalairdate,
