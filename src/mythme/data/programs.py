@@ -24,24 +24,30 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
             fields += ", programgenres.genre"
             tables += ", programgenres"
             clause += " AND programgenres.chanid = program.chanid AND programgenres.starttime = program.starttime AND programgenres.relevance != 0"  # noqa: E501
+
         clause += (
             "\nAND program.endtime >= "
-            + f"'{datetime.now(UTC).isoformat(timespec="seconds")}.000Z'"
+            + f"'{datetime.now(UTC).isoformat(timespec='seconds')}.000Z'"
         )
 
         params: list[str] = []
         for criterion in query.criteria:
-            clause += f" AND {self.colname(criterion.name)} {criterion.operator} "
-            val = self.colval(criterion)
-            if isinstance(val, list):
-                if criterion.operator == "IN":
-                    clause += "(" + ", ".join(["%s"] * len(val)) + ")"
-                elif criterion.operator == "BETWEEN":
-                    clause += "%s AND %s"
-                params.extend(val)
+            if criterion.name == "search":
+                v = f"%{criterion.value}%"
+                clause += " AND (SELECT COUNT(*) FROM credits, people WHERE credits.person = people.person AND credits.chanid = program.chanid AND credits.starttime = program.starttime AND (program.title LIKE %s OR program.description LIKE %s OR people.name LIKE %s)) > 0"  # noqa: E501
+                params.extend([v, v, v])
             else:
-                clause += "%s"
-                params.append(val)
+                val = self.colval(criterion)
+                clause += f" AND {self.colname(criterion.name)} {criterion.operator} "
+                if isinstance(val, list):
+                    if criterion.operator == "IN":
+                        clause += "(" + ", ".join(["%s"] * len(val)) + ")"
+                    elif criterion.operator == "BETWEEN":
+                        clause += "%s AND %s"
+                    params.extend(val)
+                else:
+                    clause += "%s"
+                    params.append(val)
 
         total = 0
 
