@@ -34,7 +34,7 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
         for criterion in query.criteria:
             if criterion.name == "search":
                 v = f"%{criterion.value}%"
-                clause += " AND (SELECT COUNT(*) FROM credits, people WHERE credits.person = people.person AND credits.chanid = program.chanid AND credits.starttime = program.starttime AND (program.title LIKE %s OR program.description LIKE %s OR people.name LIKE %s)) > 0"  # noqa: E501
+                clause += " AND ((SELECT COUNT(*) FROM credits, people WHERE credits.person = people.person AND credits.chanid = program.chanid AND credits.starttime = program.starttime AND people.name LIKE %s > 0) OR program.title LIKE %s OR program.description LIKE %s)"  # noqa: E501
                 params.extend([v, v, v])
             else:
                 val = self.colval(criterion)
