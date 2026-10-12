@@ -1,0 +1,5 @@
+get-listings:
+  url: ${apiUrl}/listings?channel_group=Favorites
+  method: GET
+  headers:
+    Accept: application/json

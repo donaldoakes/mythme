@@ -1,8 +1,8 @@
 import json
 from datetime import datetime, timezone, UTC
-from mythme.model.channel import ChannelIcon
+from mythme.data.channels import ChannelData
 from mythme.model.query import Criterion, DbQuery, Query
-from mythme.model.program import Channel, Program, ProgramsResponse
+from mythme.model.program import Program, ProgramsResponse
 from mythme.utils.db import get_connection
 from mythme.utils.log import logger
 
@@ -153,26 +153,14 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
                 )
         return criterion.value
 
-    def to_program(self, row: dict) -> Program:
-        channel = Channel(
-            id=row["chanid"],
-            number=row["channum"],
-            callsign=row["callsign"],
-            name=row["name"],
-        )
-        if row["icon"]:
-            channel.icon = ChannelIcon(file=row["icon"])
-            try:
-                channel.icon.shade = row["icon"].split("_")[1]
-            except IndexError:
-                pass
-
+    @staticmethod
+    def to_program(row: dict) -> Program:
         return Program(
-            channel=channel,
+            channel=ChannelData.to_channel(row),
             title=row["title"],
             subtitle=row["subtitle"] or None,
-            start=self.from_local_timezone(row["starttime"]),
-            end=self.from_local_timezone(row["endtime"]),
+            start=ProgramData.from_local_timezone(row["starttime"]),
+            end=ProgramData.from_local_timezone(row["endtime"]),
             description=row["description"] or None,
             category=row["category"],
             type=row["category_type"],
@@ -185,5 +173,6 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
             credits=row["credits"] or 0,
         )
 
-    def from_local_timezone(self, dt: datetime) -> datetime:
+    @staticmethod
+    def from_local_timezone(dt: datetime) -> datetime:
         return dt.replace(tzinfo=timezone.utc)

@@ -1,0 +1,5 @@
+get-channel-groups:
+  url: ${apiUrl}/channel-groups
+  method: GET
+  headers:
+    Accept: application/json

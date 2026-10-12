@@ -14,17 +14,8 @@ WHERE visible > 0
 AND DELETED is NULL
 ORDER BY CONVERT(channum, UNSIGNED) asc"""
 
-    def __init__(self):
-        self.icons_dir = f"{config.mythme_dir}/icons"
-        os.makedirs(self.icons_dir, exist_ok=True)
-
-    def get_channels(self) -> list[Channel]:
-        with get_connection() as conn:
-            with conn.cursor(dictionary=True) as cursor:
-                cursor.execute(ChannelData.select)
-                return [self.to_channel(row) for row in cursor.fetchall()]
-
-    def to_channel(self, row: dict) -> Channel:
+    @staticmethod
+    def to_channel(row: dict) -> Channel:
         channel = Channel(
             id=row["chanid"],
             number=row["channum"],
@@ -40,6 +31,22 @@ ORDER BY CONVERT(channum, UNSIGNED) asc"""
                 logger.debug(f"Cannot determine icon shade: {row[4]}")
 
         return channel
+
+    def __init__(self):
+        self.icons_dir = f"{config.mythme_dir}/icons"
+        os.makedirs(self.icons_dir, exist_ok=True)
+
+    def get_channels(self) -> list[Channel]:
+        with get_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(ChannelData.select)
+                return [self.to_channel(row) for row in cursor.fetchall()]
+
+    def get_channel_groups(self) -> list[str]:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT name from channelgroupnames")
+                return [row[0] for row in cursor.fetchall()]
 
     def load_icons(self):
         before = time.time()

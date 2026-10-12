@@ -8,14 +8,17 @@ from fastapi.staticfiles import StaticFiles
 from mythme.data.recordings import RecordingsData
 from mythme.data.channels import ChannelData
 from mythme.utils.log import logger
-from mythme.api import channels
-from mythme.api import programs
-from mythme.api import queries
-from mythme.api import recordings
-from mythme.api import credits
-from mythme.api import videos
-from mythme.api import content
-from mythme.api import configs
+from mythme.api import (
+    channels,
+    listings,
+    programs,
+    queries,
+    recordings,
+    credits,
+    videos,
+    content,
+    configs,
+)
 
 logger.info(f"Python: {platform.python_version()}")
 
@@ -44,6 +47,7 @@ router = APIRouter(prefix="/api")
 
 router.include_router(channels.router)
 router.include_router(programs.router)
+router.include_router(listings.router)
 router.include_router(queries.router)
 router.include_router(recordings.router)
 router.include_router(credits.router)
