@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter
 from mythme.model.program import Channel
 from mythme.data.channels import ChannelData
@@ -6,8 +7,8 @@ router = APIRouter()
 
 
 @router.get("/channels")
-def get_channels() -> list[Channel]:
-    return ChannelData().get_channels()
+def get_channels(channel_group: Optional[str] = None) -> list[Channel]:
+    return ChannelData().get_channels(channel_group)
 
 
 @router.get("/channel-groups")

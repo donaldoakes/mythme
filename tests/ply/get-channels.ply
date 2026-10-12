@@ -1,5 +1,5 @@
 get-channels:
-  url: ${apiUrl}/channels
+  url: ${apiUrl}/channels?channel_group=Favorites
   method: GET
   headers:
     Accept: application/json

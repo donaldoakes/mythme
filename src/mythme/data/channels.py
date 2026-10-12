@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Optional
 from mythme.model.channel import Channel, ChannelIcon
 from mythme.utils.db import get_connection
 from mythme.utils.mythtv import get_channel_icon
@@ -8,11 +9,10 @@ from mythme.utils.log import logger
 
 
 class ChannelData:
-    select = """SELECT chanid, channum, callsign, name, icon
-FROM channel
-WHERE visible > 0
-AND DELETED is NULL
-ORDER BY CONVERT(channum, UNSIGNED) asc"""
+    select = "SELECT chanid, channum, callsign, name, icon"
+    tables = "FROM channel"
+    clause = "WHERE visible > 0 AND deleted is NULL"
+    sort = "ORDER BY CONVERT(channum, UNSIGNED) asc"
 
     @staticmethod
     def to_channel(row: dict) -> Channel:
@@ -36,10 +36,16 @@ ORDER BY CONVERT(channum, UNSIGNED) asc"""
         self.icons_dir = f"{config.mythme_dir}/icons"
         os.makedirs(self.icons_dir, exist_ok=True)
 
-    def get_channels(self) -> list[Channel]:
+    def get_channels(self, channel_group: Optional[str] = None) -> list[Channel]:
+        clause = ChannelData.clause
+        params: list[str] = []
+        if channel_group:
+            clause += "\nAND chanid IN (SELECT chanid FROM channelgroup, channelgroupnames WHERE channelgroup.grpid = channelgroupnames.grpid AND channelgroupnames.name = %s)"
+            params.append(channel_group)
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
-                cursor.execute(ChannelData.select)
+                sql = f"{ChannelData.select}\n{ChannelData.tables}\n{clause}\n{ChannelData.sort}"
+                cursor.execute(sql, params)
                 return [self.to_channel(row) for row in cursor.fetchall()]
 
     def get_channel_groups(self) -> list[str]:
