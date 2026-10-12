@@ -1,32 +1,17 @@
-from typing import Literal, Optional, Union
-from datetime import datetime
+from typing import Optional
 from pydantic import BaseModel
+from datetime import datetime
+from mythme.model.show import Show
 from mythme.model.channel import Channel
-from mythme.model.credit import Credit
 from mythme.model.query import DbQuery
 from mythme.model.scheduled import ScheduledRecording
 
-ProgramType = Literal["", "movie", "series", "sports", "tvshow"]
 
-
-class Program(BaseModel):
+class Program(Show):
     channel: Channel
-    title: str
-    subtitle: Optional[str] = None
     start: datetime
     end: datetime
-    description: Optional[str] = None
-    type: ProgramType
-    category: str
-    year: Optional[int] = None
-    rating: float
-    """ rating: 0 to 5 (mythtv stars has eighths)"""
-    season: Optional[int] = None
-    episode: Optional[int] = None
-    aired: Optional[datetime] = None
     recording: Optional[ScheduledRecording] = None
-    genre: Optional[str] = None
-    credits: Union[int, list[Credit]] = 0
 
 
 class ProgramsResponse(BaseModel):
