@@ -16,3 +16,8 @@ class Channel(BaseModel):
     callsign: str
     name: str
     icon: Optional[ChannelIcon] = None
+
+
+class ChannelGroup(BaseModel):
+    name: str
+    channels: list[str]

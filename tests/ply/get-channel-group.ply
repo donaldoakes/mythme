@@ -1,0 +1,5 @@
+get-channel-group:
+  url: ${apiUrl}/channel-groups/Favorites
+  method: GET
+  headers:
+    Accept: application/json
