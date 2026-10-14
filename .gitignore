@@ -10,4 +10,4 @@ __pycache__/
 temp/
 *.egg-info/
 dist/
-data/
+/data/
