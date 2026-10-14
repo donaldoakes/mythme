@@ -55,17 +55,10 @@ class ChannelData:
                 return [row[0] for row in cursor.fetchall()]
 
     def get_channel_group(self, channel_group_name: str) -> Optional[ChannelGroup]:
+        group_id = self.get_group_id(channel_group_name)
+        if not group_id:
+            return None
         with get_connection() as conn:
-            group_id = 0
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "SELECT grpid from channelgroupnames WHERE name = %s",
-                    [channel_group_name],
-                )
-                rows = cursor.fetchone()
-                if not rows:
-                    return None
-                group_id = rows[0]
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT channel.callsign FROM channel, channelgroup WHERE channel.chanid = channelgroup.chanid AND channelgroup.grpid = %s",  # noqa: E501
@@ -76,6 +69,72 @@ class ChannelData:
                     name=channel_group_name,
                     channels=[row[0] for row in rows],
                 )
+
+    def get_group_id(self, channel_group_name: str) -> Optional[int]:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT grpid from channelgroupnames WHERE name = %s",
+                    [channel_group_name],
+                )
+                rows = cursor.fetchone()
+                if not rows:
+                    return None
+                return rows[0]
+
+    def insert_channel_group(self, channel_group: ChannelGroup):
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO channelgroupnames (name) VALUES (%s)",
+                    [channel_group.name],
+                )
+                group_id = self.get_group_id(channel_group.name)
+                if not group_id:
+                    raise ValueError(
+                        f"Error retrieving group ID for channel group: {channel_group.name}"
+                    )
+            with conn.cursor() as cursor:
+                for channel in channel_group.channels:
+                    cursor.execute(
+                        "INSERT INTO channelgroup (grpid, chanid) SELECT %s, chanid FROM channel WHERE callsign = %s",
+                        [group_id, channel],
+                    )
+
+    def update_channel_group(self, channel_group: ChannelGroup) -> bool:
+        group_id = self.get_group_id(channel_group.name)
+        if not group_id:
+            return False
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "DELETE FROM channelgroup WHERE grpid = %s",
+                    [group_id],
+                )
+            with conn.cursor() as cursor:
+                for channel in channel_group.channels:
+                    cursor.execute(
+                        "INSERT INTO channelgroup (grpid, chanid) SELECT %s, chanid FROM channel WHERE callsign = %s",
+                        [group_id, channel],
+                    )
+        return True
+
+    def delete_channel_group(self, channel_group_name: str) -> bool:
+        group_id = self.get_group_id(channel_group_name)
+        if not group_id:
+            return False
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "DELETE FROM channelgroup WHERE grpid = %s",
+                    [group_id],
+                )
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "DELETE FROM channelgroupnames WHERE grpid = %s",
+                    [group_id],
+                )
+        return True
 
     def load_icons(self):
         before = time.time()

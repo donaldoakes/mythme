@@ -1,0 +1,20 @@
+put-channel-group:
+  url: ${apiUrl}/channel-groups/Favorites
+  method: PUT
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body: |-
+    {
+      "name": "Favorites",
+      "channels": [
+        "KMGHDT",
+        "KUSADT",
+        "KCNCDT",
+        "KDVRDT",
+        "KWGNDT",
+        "KTVDDT",
+        "KRMADT",
+        "KBDIDT"
+      ]
+    }
