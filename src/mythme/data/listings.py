@@ -38,7 +38,7 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
                 logger.debug(f"Listings SQL: {sql}")
                 logger.debug(f"Listings params: {repr(params)}")
                 cursor.execute(sql, params)
-                channum = 0
+                channum = "0"
                 listings: list[ChannelListings] = []
                 channel_listings: Optional[ChannelListings] = None
                 for row in cursor.fetchall():
