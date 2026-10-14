@@ -34,7 +34,7 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
         with get_connection() as conn:
             with conn.cursor(dictionary=True) as cursor:
                 sql = f"SELECT {fields}\n{tables}\n{clause}"
-                sql += "\nORDER BY channel.channum, program.starttime"
+                sql += "\nORDER BY channel.channum + 0, program.starttime"
                 logger.debug(f"Listings SQL: {sql}")
                 logger.debug(f"Listings params: {repr(params)}")
                 cursor.execute(sql, params)
