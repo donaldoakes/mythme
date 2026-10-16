@@ -9,9 +9,8 @@ from mythme.utils.log import logger
 
 class ListingsData:
     fields = """channel.chanid, channel.channum, channel.callsign, channel.name, channel.icon,
-program.title, program.subtitle, program.starttime, program.endtime, program.description, program.category, program.category_type,
-CONVERT(program.airdate USING utf8) as year, program.stars, program.season, program.episode, program.originalairdate,
-(SELECT COUNT(*) FROM credits WHERE credits.chanid = program.chanid AND credits.starttime = program.starttime) AS credits"""  # noqa: E501
+program.title, program.subtitle, program.starttime, program.endtime, program.category_type,
+CONVERT(program.airdate USING utf8) as year, program.stars, program.originalairdate"""
     tables = "FROM channel, program"
     clause = "WHERE channel.chanid = program.chanid AND channel.visible > 0"
 
@@ -59,16 +58,11 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
         return Listing(
             title=row["title"],
             subtitle=row["subtitle"] or None,
+            type=row["category_type"],
+            channel=row["callsign"],
             start=ProgramData.from_local_timezone(row["starttime"]),
             end=ProgramData.from_local_timezone(row["endtime"]),
-            description=row["description"] or None,
-            category=row["category"],
-            type=row["category_type"],
             year=int(row["year"]) if row["year"] else None,
             rating=row["stars"] * 5,
-            season=row["season"] or None,
-            episode=row["episode"] or None,
             aired=row["originalairdate"] or None,
-            genre=row["genre"] if "genre" in row else None,
-            credits=row["credits"] or 0,
         )
