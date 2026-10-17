@@ -1,5 +1,5 @@
 get-listings:
-  url: ${apiUrl}/listings?channel_group=Favorites
+  url: ${apiUrl}/listings?channel_group=Favorites&end_dt=2026-10-24T00:30:00Z
   method: GET
   headers:
     Accept: application/json

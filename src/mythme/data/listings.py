@@ -15,7 +15,7 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
     clause = "WHERE channel.chanid = program.chanid AND channel.visible > 0"
 
     def get_listings(
-        self, channel_group: Optional[str] = None
+        self, channel_group: Optional[str] = None, end_dt: Optional[str] = None
     ) -> list[ChannelListings]:
         fields = ListingsData.fields
         tables = ListingsData.tables
@@ -24,6 +24,8 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
             "\nAND program.endtime >= "
             + f"'{datetime.now(UTC).isoformat(timespec='seconds')}.000Z'"
         )
+        if end_dt:
+            clause += "\nAND program.endtime <= " + f"'{end_dt}'"
 
         params: list[str] = []
         if channel_group:

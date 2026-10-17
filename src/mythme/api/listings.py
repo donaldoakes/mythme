@@ -7,5 +7,7 @@ router = APIRouter()
 
 
 @router.get("/listings")
-def get_listings(channel_group: Optional[str] = None) -> list[ChannelListings]:
-    return ListingsData().get_listings(channel_group)
+def get_listings(
+    channel_group: Optional[str] = None, end_dt: Optional[str] = None
+) -> list[ChannelListings]:
+    return ListingsData().get_listings(channel_group, end_dt)
