@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone, UTC
+from datetime import datetime, timedelta, timezone, UTC
 from mythme.data.channels import ChannelData
 from mythme.model.query import Criterion, DbQuery, Query
 from mythme.model.program import Program, ProgramsResponse
@@ -176,3 +176,16 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
     @staticmethod
     def from_local_timezone(dt: datetime) -> datetime:
         return dt.replace(tzinfo=timezone.utc)
+
+    @staticmethod
+    def round_to_half_hour(dt: datetime) -> datetime:
+        # Get total seconds past the hour (or floor to nearest 30 mins)
+        change_to_seconds = dt.minute * 60 + dt.second + dt.microsecond / 1e6
+        # 1800 seconds = 30 minutes
+        half_hour = 1800
+        remainder = change_to_seconds % half_hour
+
+        if remainder >= half_hour / 2:
+            return dt + timedelta(seconds=(half_hour - remainder))
+        else:
+            return dt - timedelta(seconds=remainder)

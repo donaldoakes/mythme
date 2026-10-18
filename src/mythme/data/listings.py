@@ -1,4 +1,4 @@
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timedelta
 from typing import Optional
 from mythme.data.channels import ChannelData
 from mythme.data.programs import ProgramData
@@ -63,7 +63,22 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
                     ):
                         channel_listings = ChannelListings(
                             channel=channel,
-                            listings=[],
+                            listings=[  # a single one-hour listing starting from the most recent half-hour
+                                Listing(
+                                    title="Unknown",
+                                    subtitle=None,
+                                    type="",
+                                    channel=channel.callsign,
+                                    start=ProgramData.round_to_half_hour(
+                                        datetime.now()
+                                    ),
+                                    end=ProgramData.round_to_half_hour(datetime.now())
+                                    + timedelta(hours=1),
+                                    year=None,
+                                    rating=0,
+                                    aired=None,
+                                )
+                            ],
                         )
                         listings.append(channel_listings)
                 if len(channel_group_channels):
