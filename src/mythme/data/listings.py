@@ -1,4 +1,4 @@
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, UTC, timedelta, timezone
 from typing import Optional
 from mythme.data.channels import ChannelData
 from mythme.data.programs import ProgramData
@@ -66,17 +66,16 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
                             listings=[  # a single one-hour listing starting from the most recent half-hour
                                 Listing(
                                     title="Unknown",
-                                    subtitle=None,
-                                    type="",
                                     channel=channel.callsign,
+                                    type="",
                                     start=ProgramData.round_to_half_hour(
                                         datetime.now()
-                                    ),
-                                    end=ProgramData.round_to_half_hour(datetime.now())
+                                    ).astimezone(timezone.utc),
+                                    end=ProgramData.round_to_half_hour(
+                                        datetime.now()
+                                    ).astimezone(timezone.utc)
                                     + timedelta(hours=1),
-                                    year=None,
                                     rating=0,
-                                    aired=None,
                                 )
                             ],
                         )

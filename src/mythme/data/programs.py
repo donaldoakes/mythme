@@ -184,7 +184,6 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.season, prog
         # 1800 seconds = 30 minutes
         half_hour = 1800
         remainder = change_to_seconds % half_hour
-
         if remainder >= half_hour / 2:
             return dt + timedelta(seconds=(half_hour - remainder))
         else:
