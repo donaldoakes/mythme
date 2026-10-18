@@ -2,6 +2,7 @@ from datetime import datetime, UTC
 from typing import Optional
 from mythme.data.channels import ChannelData
 from mythme.data.programs import ProgramData
+from mythme.model.channel import Channel
 from mythme.model.listing import ChannelListings, Listing
 from mythme.utils.db import get_connection
 from mythme.utils.log import logger
@@ -27,8 +28,10 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
         if end_dt:
             clause += "\nAND program.endtime <= " + f"'{end_dt}'"
 
+        channel_group_channels: list[Channel] = []
         params: list[str] = []
         if channel_group:
+            channel_group_channels = ChannelData().get_channels(channel_group)
             clause += "\nAND channel.chanid IN (SELECT chanid FROM channelgroup, channelgroupnames WHERE channelgroup.grpid = channelgroupnames.grpid AND channelgroupnames.name = %s)"  # noqa: E501
             params.append(channel_group)
 
@@ -52,6 +55,19 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
                         channum = row["channum"]
 
                     channel_listings.listings.append(ListingsData.to_listing(row))
+
+                # fill in any channels from the group that have no listings
+                for channel in channel_group_channels:
+                    if not any(
+                        cl.channel.callsign == channel.callsign for cl in listings
+                    ):
+                        channel_listings = ChannelListings(
+                            channel=channel,
+                            listings=[],
+                        )
+                        listings.append(channel_listings)
+                if len(channel_group_channels):
+                    listings.sort(key=lambda cl: int(cl.channel.number))
 
                 return listings
 
