@@ -50,3 +50,10 @@ LIMIT 50 OFFSET 0
 SELECT DISTINCT(programgenres.genre)
 FROM programgenres
 WHERE programgenres.relevance != 0
+
+
+SELECT channel.chanid, channel.channum, channel.callsign, channel.name, channel.icon,
+program.title, program.subtitle, program.starttime, program.endtime, program.description, program.category, program.category_type,
+CONVERT(program.airdate USING utf8) as year, program.stars, program.season, program.episode, program.originalairdate
+FROM channel, program
+WHERE callsign = 'KMGHDT' AND starttime = '2026-10-19T07:00:00Z'

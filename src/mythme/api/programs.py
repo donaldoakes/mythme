@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Request
-from mythme.model.program import ProgramsResponse
+from typing import Optional
+from fastapi import APIRouter, Request, HTTPException
+from mythme.model.program import Program, ProgramsResponse
 from mythme.data.programs import ProgramData
 from mythme.data.recordings import RecordingsData
 from mythme.query.queries import parse_params
@@ -35,3 +36,11 @@ def get_categories() -> list[str]:
 @router.get("/programs/genres")
 def get_genres() -> list[str]:
     return ProgramData().get_genres()
+
+
+@router.get("/programs/{channel}/{start}")
+def get_program(channel: str, start: str) -> Optional[Program]:
+    program = ProgramData().get_program(channel, start)
+    if not program:
+        raise HTTPException(status_code=404)
+    return program
