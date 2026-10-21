@@ -43,4 +43,7 @@ def get_program(channel: str, start: str) -> Optional[Program]:
     program = ProgramData().get_program(channel, start)
     if not program:
         raise HTTPException(status_code=404)
+    program.recording = recordings_data.find_scheduled_recording(
+        program.channel.id, program.start
+    )
     return program

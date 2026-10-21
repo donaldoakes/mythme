@@ -1,5 +1,5 @@
 get-program:
-  url: ${apiUrl}/programs/KMGHDT/2026-10-19T07:00:00Z
+  url: ${apiUrl}/programs/TCMHD/2026-10-23T11:00:00Z
   method: GET
   headers:
     Accept: application/json
