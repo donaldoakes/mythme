@@ -1,0 +1,5 @@
+get-recorded-commbreak:
+  url: ${mythtv.apiUrl}/Dvr/GetRecordedCommBreak?RecordedId=9878&OffsetType=Duration
+  method: GET
+  headers:
+    Accept: application/json
