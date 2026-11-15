@@ -1,0 +1,4 @@
+get-image-file:
+  url: ${mythtv.apiUrl}/Content/GetImageFile?StorageGroup=Screenshots&FileName=20735_20210912040000.ts.png
+  method: GET
+  headers: {}

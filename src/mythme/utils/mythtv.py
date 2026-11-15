@@ -80,6 +80,32 @@ def get_channel_icon(channel_id: int) -> Optional[bytes]:
         raise Exception(f"{url} failed: {response.status_code}")
 
 
+def get_image(storage_group: str, file: str) -> Optional[bytes]:
+    """Retrieve artwork image content.
+
+    :param storage_group: storage group
+    :type storage_group: str
+    :param file: file path
+    :type file: str
+    :return: image content
+    :rtype: bytes if found, None otherwise
+    """
+
+    url = f"{config.mythtv.api_base}/Content/GetImageFile?StorageGroup={storage_group}&FileName={file}"
+    logger.debug(f"Retrieving image for storage_group: {storage_group}, file: {file}")
+
+    response = requests.get(url)  # nosec B113
+
+    if response.status_code == 200:
+        return response.content
+    elif response.status_code == 404:
+        logger.debug(f"Image not found at {url}: {response.text}")
+        return None
+    else:
+        logger.debug(f"Image retrieval at {url} failed: {response.text}")
+        raise Exception(f"{url} failed: {response.status_code}")
+
+
 myth_hostname: Optional[str] = None
 
 

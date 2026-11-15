@@ -1,0 +1,5 @@
+get-screenshot:
+  url: ${apiUrl}/screenshots/292
+  method: GET
+  headers:
+    Accept: application/json

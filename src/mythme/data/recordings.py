@@ -10,6 +10,7 @@ from mythme.model.scheduled import ScheduledRecording
 from mythme.utils.mythtv import (
     api_call,
     api_update,
+    get_image,
     paging_params,
     get_storage_group_dirs,
 )
@@ -210,3 +211,9 @@ class RecordingsData:
                 if os.path.isfile(filepath):
                     return filepath
         return None
+
+    def get_recording_screenshot(self, recid: int) -> Optional[bytes]:
+        recording = self.get_recording(recid)
+        if recording is None:
+            return None
+        return get_image("Screenshots", f"{recording.file}.png")

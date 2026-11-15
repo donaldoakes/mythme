@@ -1,5 +1,5 @@
 from datetime import datetime
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, Request, HTTPException, Response
 from mythme.data.recordings import RecordingsData
 from mythme.model.recording import Recording, RecordingsResponse
 from mythme.model.scheduled import RecordingRequest, ScheduledRecording, recording_types
@@ -99,3 +99,13 @@ def unschedule_recording(id: int):
     RecordingsData().remove_scheduled_recording(id)
 
     return {"message": "OK"}
+
+
+@router.get("/screenshots/{recid}", response_model_exclude_none=True)
+def get_screenshot(recid: int) -> Response:
+    screenshot = RecordingsData().get_recording_screenshot(recid)
+    if screenshot is None:
+        raise HTTPException(
+            status_code=404, detail=f"Screenshot not found for recid: {recid}"
+        )
+    return Response(content=screenshot, media_type="image/png")
