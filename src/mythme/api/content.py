@@ -3,6 +3,7 @@ from fastapi import APIRouter, Header, HTTPException, status
 from fastapi.responses import StreamingResponse
 from httpx import AsyncClient
 from typing_extensions import Optional
+from mythme.data.recordings import RecordingsData
 from mythme.utils.config import config
 from mythme.utils.log import logger
 from mythme.utils.media import (
@@ -81,6 +82,48 @@ async def stream_video(path: str, range: str = Header(None)):
 
     return StreamingResponse(
         send_bytes_range_requests(str(video_path), start, end, 1024 * 1024),
+        headers=headers,
+        status_code=status_code,
+    )
+
+
+@router.get("/media/recordings/{recid}")
+async def stream_recording(recid, range: str = Header(None)):
+    recording = RecordingsData().get_recording(recid)
+    if not recording:
+        raise HTTPException(status_code=404, detail=f"Recording not found: {recid}")
+
+    rec_path = media_file_path("Default", recording.file)
+    if not rec_path:
+        raise HTTPException(
+            status_code=404, detail=f"Recording file not found: {rec_path}"
+        )
+
+    file_size = os.path.getsize(rec_path)
+
+    headers = {
+        "content-type": "video/mp2t",
+        "accept-ranges": "bytes",
+        "content-encoding": "identity",
+        "content-length": str(file_size),
+        "access-control-expose-headers": (
+            "content-type, accept-ranges, content-length, "
+            "content-range, content-encoding"
+        ),
+    }
+    start = 0
+    end = file_size - 1
+    status_code = status.HTTP_200_OK
+
+    if range is not None:
+        start, end = get_range(range, file_size)
+        size = end - start + 1
+        headers["content-length"] = str(size)
+        headers["content-range"] = f"bytes {start}-{end}/{file_size}"
+        status_code = status.HTTP_206_PARTIAL_CONTENT
+
+    return StreamingResponse(
+        send_bytes_range_requests(str(rec_path), start, end, 1024 * 1024),
         headers=headers,
         status_code=status_code,
     )
