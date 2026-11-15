@@ -61,22 +61,25 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
                     if not any(
                         cl.channel.callsign == channel.callsign for cl in listings
                     ):
+                        # three one-hour listings starting from the most recent half-hour
                         channel_listings = ChannelListings(
                             channel=channel,
-                            listings=[  # a single one-hour listing starting from the most recent half-hour
+                            listings=[
                                 Listing(
-                                    title="Unknown",
+                                    title="No Listing",
                                     channel=channel.callsign,
                                     type="",
                                     start=ProgramData.round_to_half_hour(
                                         datetime.now()
-                                    ).astimezone(timezone.utc),
+                                    ).astimezone(timezone.utc)
+                                    + timedelta(hours=i),
                                     end=ProgramData.round_to_half_hour(
                                         datetime.now()
                                     ).astimezone(timezone.utc)
-                                    + timedelta(hours=1),
+                                    + timedelta(hours=i + 1),
                                     rating=0,
                                 )
+                                for i in range(3)
                             ],
                         )
                         listings.append(channel_listings)
