@@ -150,6 +150,17 @@ class VideoData:
             return self.to_video(res["VideoMetadataInfo"])
         return None
 
+    def get_video_by_id(self, video_id: str) -> Optional[Video]:
+        res = api_call(f"Video/GetVideo?Id={video_id}")
+        if (
+            res
+            and "VideoMetadataInfo" in res
+            and "Id" in res["VideoMetadataInfo"]
+            and res["VideoMetadataInfo"]["Id"]
+        ):
+            return self.to_video(res["VideoMetadataInfo"])
+        return None
+
     def get_video_file(self, title: str, category: str, medium: str) -> Optional[str]:
         """Checks the file system, returns the full file path"""
         filepath = self.get_filepath(title, category, medium)
@@ -534,3 +545,14 @@ class VideoData:
             vid["Inetref"] = video.webref.ref
 
         return vid
+
+    def get_video_poster(self, video_id: str) -> Optional[bytes]:
+        video = self.get_video_by_id(video_id)
+        if video is None:
+            return None
+        category = video.file.split("/")[0]
+        poster_path = self.get_poster_path(category, video.poster)
+        if poster_path and os.path.isfile(poster_path):
+            with open(poster_path, "rb") as f:
+                return f.read()
+        return None

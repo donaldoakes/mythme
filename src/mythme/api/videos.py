@@ -1,7 +1,7 @@
 import os
 import shutil
 from typing import Optional
-from fastapi import APIRouter, Request, HTTPException, UploadFile
+from fastapi import APIRouter, Request, HTTPException, Response, UploadFile
 from fastapi.responses import PlainTextResponse
 from mythme.data.recordings import RecordingsData
 from mythme.data.videos import VideoData
@@ -160,6 +160,16 @@ def post_video_file(
         status_code=404,
         detail=f"Storage group subdirectory not found for category: {category}",
     )
+
+
+@router.get("/video-posters/{video_id}", response_model_exclude_none=True)
+def get_poster(video_id: str) -> Response:
+    poster = VideoData().get_video_poster(video_id)
+    if poster is None:
+        raise HTTPException(
+            status_code=404, detail=f"Poster not found for video ID: {video_id}"
+        )
+    return Response(content=poster, media_type="image/jpg")
 
 
 @router.post("/video-poster")
