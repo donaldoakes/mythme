@@ -1,5 +1,5 @@
 get-video-poster:
-  url: ${apiUrl}/videos/Silent/Our Dancing Daughters.mpg
+  url: ${apiUrl}/video-posters/457881
   method: GET
   headers:
     Accept: application/json

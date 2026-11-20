@@ -169,7 +169,7 @@ def get_poster(video_id: str) -> Response:
         raise HTTPException(
             status_code=404, detail=f"Poster not found for video ID: {video_id}"
         )
-    return Response(content=poster, media_type="image/jpg")
+    return Response(content=poster, media_type="image/jpeg")
 
 
 @router.post("/video-poster")
