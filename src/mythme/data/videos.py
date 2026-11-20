@@ -223,6 +223,14 @@ class VideoData:
             logger.error("Coverart storage group dirs not found")
         return None
 
+    def get_video_category(self, filepath: str) -> Optional[str]:
+        category_dir = filepath.split("/")[0]
+        for category in config.mythtv.categories:
+            if category_dir == config.mythtv.categories[category]:
+                return category
+        logger.error(f"No category config found for filepath: {filepath}")
+        return None
+
     def get_db_filepaths(self) -> dict[str, int]:
         with get_connection() as conn:
             with conn.cursor() as cursor:
@@ -550,7 +558,9 @@ class VideoData:
         video = self.get_video_by_id(video_id)
         if video is None:
             return None
-        category = video.file.split("/")[0]
+        category = self.get_video_category(video.file)
+        if category is None:
+            return None
         poster_path = self.get_poster_path(category, video.poster)
         if poster_path and os.path.isfile(poster_path):
             with open(poster_path, "rb") as f:
