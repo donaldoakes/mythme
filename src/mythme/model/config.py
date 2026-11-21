@@ -24,8 +24,17 @@ class DailyVidConfig:
 
 
 @dataclass
+class ChatConfig:
+    anthropic_version: str
+    bedrock_models: dict[str, str]
+    mythme_models: dict[str, str]
+    max_tokens: int
+
+
+@dataclass
 class MythmeConfig:
     mythme_dir: str
     database: DbConnectConfig
     mythtv: MythtvConfig
+    chat: ChatConfig
     dailyvid: Optional[DailyVidConfig] = None

@@ -18,6 +18,7 @@ from mythme.api import (
     videos,
     content,
     configs,
+    infos,
 )
 
 logger.info(f"Python: {platform.python_version()}")
@@ -54,6 +55,7 @@ router.include_router(credits.router)
 router.include_router(videos.router)
 router.include_router(content.router)
 router.include_router(configs.router)
+router.include_router(infos.router)
 
 
 app = FastAPI(lifespan=lifespan)

@@ -1,0 +1,38 @@
+post-movie-info:
+  url: ${apiUrl}/movie-infos
+  method: POST
+  headers:
+    Accept: application/json
+    Content-Type: application/json
+  body: |-
+    {
+      "title": "Bad Blonde",
+      "year": 1953,
+      "genre": "Film Noir",
+      "credits": [
+        {
+          "name": "Reginald Le Borg",
+          "role": "director"
+        },
+        {
+          "name": "actor",
+          "role": "Barbara Payton"
+        },
+        {
+          "name": "actor",
+          "role": "Frederick Valk"
+        },
+        {
+          "name": "actor",
+          "role": "John Slater"
+        },
+        {
+          "name": "actor",
+          "role": "Sidney James"
+        },
+        {
+          "name": "actor",
+          "role": "Tony Wright"
+        }
+      ]
+    }

@@ -7,6 +7,7 @@ import mariadb
 from dotenv import load_dotenv
 from yaml import safe_load
 from mythme.model.config import (
+    ChatConfig,
     DailyVidConfig,
     DbConnectConfig,
     MythmeConfig,
@@ -135,10 +136,18 @@ WHERE value in ('BackendStatusPort', 'BackendServerAddr')"""
     if myth_config is None:
         raise ValueError("No MythTV API base URL found")
 
+    chat_config = ChatConfig(
+        anthropic_version=cfg["chat"]["anthropic_version"],
+        bedrock_models=cfg["chat"]["bedrock_models"],
+        mythme_models=cfg["chat"]["mythme_models"],
+        max_tokens=cfg["chat"]["max_tokens"],
+    )
+
     mythme_config = MythmeConfig(
         mythme_dir=f"{mythme_dir}",
         database=db_config,
         mythtv=myth_config,
+        chat=chat_config,
     )
 
     if "dailyvid" in cfg:
