@@ -14,7 +14,6 @@ def get_movie_details(json_info: str) -> str:
    - Awards the movie has won or been nominated for, if any
    - The director and their significance in the film industry, including other well-known films they've directed
    - Cast members along with a few of their best-known roles in other movies, including any awards/nominations if any
-   - If possible, links to the cast member's Wikipedia pages or IMDb profiles
    - Any interesting trivia or context to help someone understand why this movie is significant or worth watching
    - Information about the movie's specific genre or movement (e.g. Film Noir, Pre-Code, Horror), if relevant
    - Rotten Tomatoes Tomatometer and Popcornmeter scores, and Metacritic rating if available\n"""
