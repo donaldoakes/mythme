@@ -15,24 +15,24 @@ post-movie-info:
           "role": "director"
         },
         {
-          "name": "actor",
-          "role": "Barbara Payton"
+          "name": "Barbara Payton",
+          "role": "actor"
         },
         {
-          "name": "actor",
-          "role": "Frederick Valk"
+          "name": "Frederick Valk",
+          "role": "actor"
         },
         {
-          "name": "actor",
-          "role": "John Slater"
+          "name": "John Slater",
+          "role": "actor"
         },
         {
-          "name": "actor",
-          "role": "Sidney James"
+          "name": "Sidney James",
+          "role": "actor"
         },
         {
-          "name": "actor",
-          "role": "Tony Wright"
+          "name": "Tony Wright",
+          "role": "actor"
         }
       ]
     }
