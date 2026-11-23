@@ -1,5 +1,6 @@
 from typing import cast
 from fastapi import APIRouter, HTTPException
+from mythme.data.programs import ProgramData
 from mythme.model.credit import Credit
 from mythme.model.info import (
     MovieInfo,
@@ -8,9 +9,9 @@ from mythme.model.info import (
     ProgramInfoResponse,
 )
 from mythme.data.infos import get_movie_info, get_program_info
-from mythme.data.listings import ListingsData
 from mythme.data.videos import VideoData
 from mythme.data.recordings import RecordingsData
+from mythme.model.program import Program
 
 router = APIRouter()
 
@@ -42,65 +43,46 @@ async def get_rec_info(recid: int) -> ProgramInfoResponse:
     if not recording:
         raise HTTPException(status_code=404, detail=f"Recording not found: {recid}")
 
-    if recording.type == "movie":
-        movie_info = MovieInfo(
-            title=recording.title,
-            year=recording.year or 0,
-            genre=recording.category,
-            rating=recording.rating,
-            credits=cast(list[Credit], recording.credits or []),
-        )
-        content = get_movie_info(movie_info.model_dump_json(indent=2))
-        return ProgramInfoResponse(program=movie_info, details=content)
-    else:
-        program_info = ProgramInfo(
-            channel=recording.channel,
-            title=recording.title,
-            subtitle=recording.subtitle,
-            type=recording.type,
-            category=recording.category,
-            start=recording.start,
-            end=recording.end,
-            description=recording.description,
-            season=recording.season,
-            episode=recording.episode,
-            year=recording.year or 0,
-            credits=cast(list[Credit], recording.credits or []),
-            aired=recording.aired,
-        )
-        content = get_program_info(program_info.model_dump_json(indent=2))
-        return ProgramInfoResponse(program=program_info, details=content)
+    return get_program_info_response(recording)
 
 
 @router.get("/show-infos/{channel}/{start}", response_model_exclude_none=True)
-async def get_listing_show_info(channel: str, start: str) -> ProgramInfoResponse:
-    listing = ListingsData().get_listing(channel, start)
-    if not listing:
+async def get_show_info(channel: str, start: str) -> ProgramInfoResponse:
+    program = ProgramData().get_program(channel, start)
+    if not program:
         raise HTTPException(
-            status_code=404, detail=f"Listing not found: {channel} {start}"
+            status_code=404, detail=f"Program not found: {channel} {start}"
         )
 
-    if listing.type == "movie":
+    return get_program_info_response(program)
+
+
+def get_program_info_response(program: Program) -> ProgramInfoResponse:
+    if program.type == "movie":
         movie_info = MovieInfo(
-            title=listing.title,
-            year=listing.year or 0,
-            rating=listing.rating,
-            credits=[],
+            title=program.title,
+            year=program.year or 0,
+            genre=program.category,
+            rating=program.rating,
+            credits=cast(list[Credit], program.credits or []),
         )
         content = get_movie_info(movie_info.model_dump_json(indent=2))
         return ProgramInfoResponse(program=movie_info, details=content)
     else:
         program_info = ProgramInfo(
-            title=listing.title,
-            subtitle=listing.subtitle,
-            channel=listing.channel,
-            start=listing.start,
-            end=listing.end,
-            type=listing.type,
-            year=listing.year or 0,
-            aired=listing.aired,
-            category="",
-            credits=[],
+            channel=program.channel,
+            title=program.title,
+            subtitle=program.subtitle,
+            type=program.type,
+            category=program.category,
+            start=program.start,
+            end=program.end,
+            description=program.description,
+            season=program.season,
+            episode=program.episode,
+            year=program.year or 0,
+            credits=cast(list[Credit], program.credits or []),
+            aired=program.aired,
         )
         content = get_program_info(program_info.model_dump_json(indent=2))
         return ProgramInfoResponse(program=program_info, details=content)
