@@ -1,0 +1,5 @@
+get-rec-info:
+  url: ${apiUrl}/rec-infos/9903
+  method: GET
+  headers:
+    Accept: application/json

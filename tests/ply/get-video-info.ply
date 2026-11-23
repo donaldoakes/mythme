@@ -1,5 +1,5 @@
-get-movie-info:
-  url: ${apiUrl}/movie-infos/456670
+get-video-info:
+  url: ${apiUrl}/video-infos/456670
   method: GET
   headers:
     Accept: application/json
