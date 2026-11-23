@@ -9,14 +9,14 @@ from mythme.model.program import ProgramType
 class MovieInfo(BaseModel):
     title: str
     year: int
-    genre: str
+    genre: Optional[str] = None
     description: Optional[str] = None
     rating: Optional[float] = None
     credits: list[Credit]
 
 
 class ProgramInfo(BaseModel):
-    channel: Channel
+    channel: Channel | str
     title: str
     subtitle: Optional[str]
     start: datetime

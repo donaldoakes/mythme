@@ -88,6 +88,18 @@ CONVERT(program.airdate USING utf8) as year, program.stars, program.originalaird
 
                 return listings
 
+    def get_listing(self, channel: str, start: str) -> Listing | None:
+        clause = f"{ListingsData.clause} AND callsign = %s AND starttime = %s"
+        params = [channel, start]
+        sql = f"SELECT {ListingsData.fields} {ListingsData.tables} {clause}"
+        with get_connection() as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(sql, params)
+                row = cursor.fetchone()
+                if not row:
+                    return None
+                return ListingsData.to_listing(row)
+
     @staticmethod
     def to_listing(row: dict) -> Listing:
         return Listing(

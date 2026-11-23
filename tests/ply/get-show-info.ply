@@ -1,0 +1,5 @@
+get-show-info:
+  url: ${apiUrl}/show-infos/TCMHD/2026-11-23T19:30:00Z
+  method: GET
+  headers:
+    Accept: application/json
