@@ -6,7 +6,7 @@ from mythme.model.movie import MovieInfo, MovieInfoResponse
 router = APIRouter()
 
 
-@router.get("/vid-movie-infos/{video_id}", response_model_exclude_none=True)
+@router.get("/video-infos/{video_id}", response_model_exclude_none=True)
 async def get_movie_info(video_id: str) -> MovieInfoResponse:
     video = VideoData().get_video_by_id(video_id)
     if not video:
